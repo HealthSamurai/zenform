@@ -6,7 +6,7 @@ cljsbuild-prod:
 	lein cljsbuild once prod
 
 cljsbuild-dev:
-	lein cljsbuild once dev
+	lein cljsbuild auto dev
 
 figwheel:
 	lein figwheel
