@@ -17,3 +17,7 @@ test:
 
 git-hash:
 	@echo $(shell git rev-parse --short HEAD)
+
+.PHONY: clear
+clear:
+	rm -rf resources/public/js

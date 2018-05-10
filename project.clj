@@ -11,8 +11,6 @@
                  [garden "1.3.5"]
                  [cljsjs/moment-timezone "0.5.11-1"]]
 
-  :main ^:skip-aot zenform.core
-
   :min-lein-version "2.5.0"
 
   :target-path "target/%s"
@@ -30,7 +28,7 @@
 
   :cljsbuild
   {:builds [{:id "dev"
-             :source-paths ["src/cljs"]
+             :source-paths ["src"]
              :figwheel true
              :compiler {:main zenform.core
                         :preloads [re-frisk.preload]
