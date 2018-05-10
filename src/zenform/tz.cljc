@@ -1,4 +1,5 @@
 (ns zenform.tz
+  #?(:clj (:refer-clojure :exclude [format]))
   (:require [zenform.calendar :as cal]
             [clojure.string :as str]))
 
