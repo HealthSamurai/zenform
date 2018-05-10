@@ -27,14 +27,14 @@
                                   [org.clojure/tools.nrepl "0.2.13"]]}}
 
   :cljsbuild
-  {:builds [{:id "dev"
+  {:builds [{:id "demo"
              :source-paths ["src"]
              :figwheel true
-             :compiler {:main zenform.core
+             :compiler {:main demo.core
                         :preloads [re-frisk.preload]
                         :optimizations :none
                         :asset-path "/js/out"
-                        :output-to "resources/public/js/zenform.js"
+                        :output-to "resources/public/js/demo.js"
                         :output-dir "resources/public/js/out"
                         :source-map true
                         :pretty-print true}}]})
