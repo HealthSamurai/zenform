@@ -21,3 +21,9 @@ git-hash:
 .PHONY: clear
 clear:
 	rm -rf resources/public/js
+
+PORT=8008
+
+server:
+	open "http://127.0.0.1:$(PORT)"
+	cd resources/public && python -m SimpleHTTPServer $(PORT)
