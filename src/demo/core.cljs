@@ -58,12 +58,14 @@
         :search [:search/search :CPT [:cpt]]
         :items [:search/result [:cpt]]
         :loading [:search/loading [:cpt]]}]]]]
-#_
+
    [:div.inp-block.inp-2.spacer
     [:span.lbl "Button Select"]
     [:div.inp
      [zenform/button-select
-      {:form-path form-path :path [:button-select]}]]]
+      {:form-path form-path
+       :path [:gender]
+       :items ["Male" "Female" "Other"]}]]]
 #_
    [:div.inp-block.inp-2.spacer
     [:span.lbl "Radio"]
