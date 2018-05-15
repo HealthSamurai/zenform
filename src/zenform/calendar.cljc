@@ -31,7 +31,7 @@
 (defn number-of-days [y m]
   (cond
     (contains? #{4 6 9 11} m) 30
-    (= 2 m (is-leap? y)) 29
+    (and (= 2 m) (is-leap? y)) 29
     (= 2 m) 28
     :else 31))
 
