@@ -19,6 +19,10 @@
                      :on-change {:event ::on-change-method}}
             :amount {:path [:amount]
                      :type :float}
+
+            :date {:path [:date]
+                   :type :calendar}
+
             :notes {:path [:notes]
                     :type :string}}})
 
@@ -47,7 +51,7 @@
     [:div.inp
      [zenform/input
       {:form-path form-path :path [:notes]}]]]
-#_
+   #_
    [:div.form-row
     [:div.inp-block.inp-2
      [:span.lbl "CPT"]
@@ -58,7 +62,7 @@
         :search [:search/search :CPT [:cpt]]
         :items [:search/result [:cpt]]
         :loading [:search/loading [:cpt]]}]]]]
-
+   #_
    [:div.inp-block.inp-2.spacer
     [:span.lbl "Button Select"]
     [:div.inp
@@ -66,19 +70,26 @@
       {:form-path form-path
        :path [:gender]
        :items ["Male" "Female" "Other"]}]]]
-#_
+
+   [:div.inp-block.inp-2.spacer
+    [:span.lbl "Date"]
+    [:div.inp
+     [zenform/calendar
+      {:form-path form-path
+       :path [:date]}]]]
+   #_
    [:div.inp-block.inp-2.spacer
     [:span.lbl "Radio"]
     [:div.inp
      [zenform/radio
       {:form-path form-path :path [:radio]}]]]
-#_
+   #_
    [:div.inp-block.inp-2.spacer
     [:span.lbl "Date Input"]
     [:div.inp
      [zenform/date-input
       {:form-path form-path :path [:date-input]}]]]
-#_
+   #_
    [:div.inp-block.inp-2.spacer
     [:span.lbl "Calendar"]
     [:div.inp

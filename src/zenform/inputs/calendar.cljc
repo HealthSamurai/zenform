@@ -35,7 +35,7 @@
                         (:value form-node)
                         (cal/today))]
     (assoc form-node
-           :next-ev [:zenform/calendar-month path {:y y :m m} :prev]
+           :next-ev [:zenform/calendar-month path {:y y :m m} :next]
            :prev-ev [:zenform/calendar-month path {:y y :m m} :prev]
            :cal (cal/for-month y m {:active (:value form-node)}))))
 
@@ -61,14 +61,14 @@
       [:thead
        [:tr
         [:th.clickable
-         [:a {:on-click #(rf/dispatch (:next-ev data))} "<"]]
+         [:a {:on-click #(rf/dispatch (:prev-ev data))} "<"]]
         [:th {:col-span 5}
          [:a {:on-click #(rf/dispatch [:zenform/calendar-mode path :year])} y]
          " "
          [:a {:on-click #(rf/dispatch [:zenform/calendar-mode path :month])}
           (get-in cal/month-names [m :short])]]
         [:th.clickable
-         [:a {:on-click #(rf/dispatch (:prev-ev data))} ">"]]]
+         [:a {:on-click #(rf/dispatch (:next-ev data))} ">"]]]
        [:tr
         [:th "Su"]
         [:th "Mo"]
@@ -84,7 +84,7 @@
           (for [cell row]
             [:td.clicable
              {:key (:d cell)
-              :class (str (when (:current cell) "current ")
+              :class (str (when (:current cell) "current")
                           (when (:active cell) "active"))
               :on-click #(rf/dispatch [:zenform/calendar-set-value path cell])}
              (:d cell)])])]]]))

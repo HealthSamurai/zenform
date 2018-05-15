@@ -98,7 +98,10 @@
    12 {:name  "December" :short "Dec"}})
 
 (defn today []
-  #?(:clj {:y 2018 :m 4 :d 27})
+  #?(:clj (let [d (java.util.Date.)]
+            {:y (-> d .getYear (+ 1900))
+             :m (-> d .getMonth inc)
+             :d (-> d .getDate)}))
   #?(:cljs (let [d (js/Date.)]
              {:y (.getFullYear d)
               :m (inc (.getMonth d))
