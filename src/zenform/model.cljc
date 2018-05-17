@@ -9,7 +9,7 @@
    [zenform.zmethods :as zm]))
 
 (defn errors [vals v]
-  (not-empty
+  #_(not-empty
    (reduce-kv
     (fn [errs nm cfg]
       (if-let [{:keys [f message]} (get v/validators nm)]
@@ -71,7 +71,9 @@
 (defmethod coerce :string [_ v] (str v))
 (defmethod coerce :object [_ v] v)
 
-(defn get-value [form-data]
+(defn get-value
+  "get value from form-model"
+  [form-data]
   (cond
     (= (:type form-data) "form")
     (reduce-kv (fn [m k v]
@@ -210,7 +212,7 @@
 (defn set-value [db fp p v]
   (let [pth (into fp (get-path p))
         d (get-in db pth)
-        vals (into {} (filter (fn [[_ c]] (= (:event c) :change)) (:validators d)))
+        vals {} #_(into {} (filter (fn [[_ c]] (= (:event c) :change)) (:validators d)))
         d* (merge d {:value v
                      :errors (errors vals v)
                      :touched true})
@@ -240,7 +242,7 @@
       (let [cur (r/cursor db (into fp (get-path p)))]
         (reaction @cur)))))
 #?(:clj
-   (rf/reg-sub-raw
+   (rf/reg-sub
     :zenform/form-path
     (fn [db [_ fp p]]
       (get-in db (into fp (get-path p))))))
@@ -348,11 +350,10 @@
                          (assoc-in form [:value k :value] v))
                 form new-value)))))
 
-(defn init-form [db form-path schema init-value]
-  ;; may be make ->form-model optional
-  (let [init-value (when init-value
-                     (or (:Defaults init-value) (->form-model init-value schema)))]
-    (assoc-in db form-path (mk-form-data schema (conj form-path :value) (or init-value {})))))
+(defn init-form
+  "get schema and initial value and create form-model in re-frame db"
+  [db form-path schema init-value]
+  (assoc-in db form-path (mk-form-data schema (conj form-path :value) (or init-value {}))))
 
 (defn init [db [_ form-path schema init-value]]
   (init-form db form-path schema init-value))
