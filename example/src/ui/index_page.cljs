@@ -45,5 +45,3 @@
 (ui-routes/reg-page
  :index {:title "Welcome" :w 1 :cmp index})
 
-(ui-routes/reg-page
- :calendar {:title "Calendar" :w 2 :cmp index})

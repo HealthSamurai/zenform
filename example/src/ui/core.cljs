@@ -14,7 +14,8 @@
    [ui.routing]
    [ui.routes :refer [routes href pages] :as ui-routes]
 
-   [ui.index-page]))
+   [ui.index-page]
+   [ui.calendar-page]))
 
 (def h3 38)
 (def h2 24)

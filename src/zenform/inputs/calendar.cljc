@@ -1,5 +1,4 @@
 (ns zenform.inputs.calendar
-  #?(:cljs (:require-macros [reagent.ratom :refer [reaction run!]]))
   (:require
    [re-frame.core :as rf]
    [zenform.zmethods :as zm]
@@ -13,22 +12,23 @@
   (let [{y :y m :m} (or date (cal/today))]
     {}))
 
-(rf/reg-event-db
- :zenform/calendar-month
- (fn [db [_ path {y :y m :m} dir]]
-   (assoc-in db (conj path :state :value)
-             (let [[y m] (cal/shift-month y m dir)]
-               {:y y :m m}))))
+(defn calendar-month
+  [db [_ path {y :y m :m} dir]]
+  (assoc-in db (conj path :state :value)
+            (let [[y m] (cal/shift-month y m dir)]
+              {:y y :m m})))
 
-(rf/reg-event-db
- :zenform/calendar-set-value
- (fn [db [_ path v]]
-   (update-in db path
-              (fn [x] (assoc x
-                             :value v
-                             :dropdown false
-                             :state (assoc (:state x) :value v))))))
+(rf/reg-event-db :zenform/calendar-month calendar-month)
 
+(defn calendar-set-value
+  [db [_ path v]]
+  (update-in db path
+             (fn [x] (assoc x
+                            :value v
+                            :dropdown false
+                            :state (assoc (:state x) :value v))))) 
+
+(rf/reg-event-db :zenform/calendar-set-value calendar-set-value)
 
 (defn calendar-sub [{path :path :as form-node}]
   (let [{y :y m :m} (or (get-in form-node [:state :value])
@@ -39,18 +39,7 @@
            :prev-ev [:zenform/calendar-month path {:y y :m m} :prev]
            :cal (cal/for-month y m {:active (:value form-node)}))))
 
-#?(:cljs
-   (rf/reg-sub-raw
-    :zenform/calendar
-    (fn [db [_ fp p]]
-      (let [cur (r/cursor db (into fp (model/get-path p)))]
-        (reaction
-         (calendar-sub @cur))))))
-#?(:clj
-   (rf/reg-sub-raw
-    :zenform/calendar
-    (fn [db [_ fp p]]
-      (calendar-sub (get-in db (into fp (model/get-path p)))))))
+(model/reg-form-cursor-sub :zenform/calendar calendar-sub)
 
 (defn widget [{fp :form-path p :path}]
   (let [{{y :y m :m cal :cal} :cal
