@@ -5,7 +5,7 @@
   [form-path field-path]
   (let [field (rf/subscribe [:zenform.subs/get-field form-path field-path])]
     (fn [form-path field-path]
-      (let [{:keys [id label name value]} @field]
+      (let [{:keys [id label name value errors]} @field]
         [:div
          (when (and id label)
            [:label {:for id} label])
@@ -15,4 +15,8 @@
                   :on-change
                   (fn [e]
                     (let [val (-> e .-target .-value)]
-                      (rf/dispatch [:zenform.events/on-change form-path field-path val])))}]]))))
+                      (rf/dispatch [:zenform.events/on-change form-path field-path val])))}]
+         (when errors
+           [:ul
+            (for [err errors]
+              ^{:key err} [:p err])])]))))

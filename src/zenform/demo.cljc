@@ -14,7 +14,9 @@
    [:some :form]
    [(field/integer-field
      [:foo :bar :baz]
-     {:validators [(val/range 1 10)]})]))
+     {:error-message "This value is not an integer."
+      :validators [(val/range
+                    1 10 {:message "The value doesn't fit (1, 10) range"})]})]))
 
 (defn form-view []
   [:div
