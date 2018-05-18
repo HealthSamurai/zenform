@@ -18,13 +18,21 @@
           :font-size "12px"
           :cursor "pointer"}
      [:&:hover {:background-color "#f1f1f1"}]]
-    [:td {:width "30px"
-          :height "30px"
-          :text-align "center"
-          :font-size "11px"
-          :cursor "pointer"
-          :color "#999"}
+    [:td {:padding 0}]
+    [:.zen-cal-cell
+     {:width "30px"
+      :display "block"
+      :text-decoration "none"
+      :border-radius "100%"
+      :height "30px"
+      :padding-top "8px"
+      :text-align "center"
+      :font-size "11px"
+      :cursor "pointer"
+      :color "#999"}
      [:&.current {:cursor "pointer" :color "#666"}]
+     [:&.active  {:color "white" :background-color "#555"}
+      [:&:hover {:background-color "#444"}]]
      [:&:hover {:background-color "#f1f1f1"}]]]
    [:.zen-box {:border "1px solid #ddd"
                :display "block"

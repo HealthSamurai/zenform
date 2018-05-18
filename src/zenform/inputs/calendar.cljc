@@ -71,9 +71,11 @@
          [:tr {:key (let [f (first row)]
                       (str (:m f) "-" (:d f)))}
           (for [cell row]
-            [:td.clicable
-             {:key (:d cell)
-              :class (str (when (:current cell) "current")
-                          (when (:active cell) "active"))
-              :on-click #(rf/dispatch [:zenform/calendar-set-value path cell])}
-             (:d cell)])])]]]))
+            [:td.clicable {:key (:d cell)}
+             [:a.zen-cal-cell 
+              {:href "javascript:void(0)"
+               :class (str (when (:current cell) "current")
+                           " "
+                           (when (:active cell) "active"))
+               :on-click #(rf/dispatch [:zenform/calendar-set-value path cell])}
+              (:d cell)]])])]]]))
