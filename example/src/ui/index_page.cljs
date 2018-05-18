@@ -22,14 +22,16 @@
       [:div.form
        [:div.zen-row
         [:span.zen-label "Name"]
-        [:div.zen-input [zenform/input {:form-path form-path :path [:name]}]]
-        [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:name]}])]]]
+        [:div.zen-col
+         [:div.zen-input [zenform/input {:form-path form-path :path [:name]}]]
+         [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:name]}])]]]]
 
        [:br]
        [:div.zen-row
         [:span.zen-label "Email"]
-        [:div.zen-input [zenform/input {:form-path form-path :path [:email]}]]
-        [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:email]}])] ]]]]
+        [:div.zen-col
+         [:div.zen-input [zenform/input {:form-path form-path :path [:email]}]]
+         [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:email]}])] ]]]]]
 
      [:div.col
 

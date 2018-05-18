@@ -14,8 +14,12 @@
    [ui.routing]
    [ui.routes :refer [routes href pages] :as ui-routes]
 
+   [zenform.styles :as zstyles]
    [ui.index-page]
-   [ui.calendar-page]))
+   [ui.calendar-page]
+   [ui.styles-page]
+   ))
+
 
 (def h3 38)
 (def h2 24)
@@ -24,10 +28,13 @@
 (defn style [gcss]
   [:style (garden/css gcss)])
 
+(def zstyles (garden/css zstyles/all))
+
 (defn current-page []
   (let [current-route (rf/subscribe [:route-map/current-route])]
     (fn []
       [:div
+       [:style zstyles]
        (let [{page :match params :params} @current-route]
          (if page
            (if-let [cmp (:cmp (ui-routes/resolve-page (:id page)))]

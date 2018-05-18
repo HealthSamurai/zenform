@@ -14,8 +14,7 @@
    [zenform.inputs.calendar :as calendar]
    [zenform.inputs.date-input :as date-input]
    [zenform.inputs.radio :as radio]
-   [cljs.pprint :as pprint]
-   ))
+   [cljs.pprint :as pprint]))
 
 (def ->form-model model/->form-model)
 (def input input/widget)

@@ -17,20 +17,22 @@
   (rf/dispatch [:zenform/init form-path form-schema init-value])
   (fn [_]
     [:div.row
-     
      [:div.col
       [:div.form
        [:div.zen-row
         [:span.zen-label "Calendar"]
-        [:div.zen-notes [:code (pr-str ['zenform/calendar {:form-path form-path :path [:start]}])]]
-        [:div.zen-input
-         [zenform/calendar {:form-path form-path :path [:start]}]]]
+        [:div.zen-col
+         [:div.zen-input
+          [:div.zen-notes [:code (pr-str ['zenform/calendar {:form-path form-path :path [:start]}])]]
+          [zenform/calendar {:form-path form-path :path [:start]}]]]]
 
        [:br]
        [:div.zen-row
         [:span.zen-label "Date"]
-        [:div.zen-input [zenform/date-input {:form-path form-path :path [:end]}]]
-        [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:end]}])] ]]]]
+        [:div.zen-col
+         [:div.zen-input
+          [zenform/date-input {:form-path form-path :path [:end]}]]
+         [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:end]}])] ]]]]]
 
      [:div.col
 
