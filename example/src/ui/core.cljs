@@ -107,7 +107,7 @@
    styles
    [:div.topnav
     [:a.brand
-     [:img {:src "/icon.png" :style {:width "30px"}}]
+     [:img {:src "icon.png" :style {:width "30px"}}]
      " "
      "zenform"]]
    [navigation]
