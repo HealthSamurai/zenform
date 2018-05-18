@@ -2,8 +2,7 @@
   (:require [clojure.string :as s]
             [zenform.validators :as val]
             #?(:clj [zenform.util :refer [with-catch]]
-               :cljs [zenform.util :refer-macros [with-catch]]))
-  (:refer-clojure :exclude [coerce]))
+               :cljs [zenform.util :refer-macros [with-catch]])))
 
 (def field-defaults
   {:type nil
@@ -13,12 +12,14 @@
    :label nil
    :description nil
    :value nil
+   :required? false
    :value-clean nil
    :validators nil
-   :error-message "Wrong value"
+   :message-required "This value is required"
+   :message-parse "Wrong field value"
    :errors nil})
 
-(defmulti coerce :type)
+(defmulti parse :type)
 
 
 #?(:cljs
@@ -27,7 +28,7 @@
        (when-not (js/isNaN val)
          val))))
 
-(defmethod coerce :integer
+(defmethod parse :integer
   [{:keys [value] :as field}]
 
   (cond
@@ -38,7 +39,7 @@
     (string? value)
     (-> value s/trim #?(:cls Integer/parseInt :cljs parseInt))))
 
-(defmethod coerce :boolean
+(defmethod parse :boolean
   [{:keys [value] :as field}]
 
   (cond
@@ -53,7 +54,7 @@
       false))
 
 (defn on-change
-  [{:keys [validators error-message] :as field} value]
+  [{:keys [validators required? message-parse message-required] :as field} value]
 
   (let [*field (transient field)
         *errors (transient [])]
@@ -61,13 +62,16 @@
     (assoc! *field :value value)
     (assoc! *field :value-clean nil)
 
+    (when (and required? (empty? value))
+      (conj! *errors message-required))
+
     (when-not (empty? value)
 
-      (let [value-clean (with-catch (coerce *field))]
+      (let [value-clean (with-catch (parse *field))]
         (assoc! *field :value-clean value-clean)
 
         (when-not (some? value-clean)
-          (conj! *errors error-message))
+          (conj! *errors message-parse))
 
         (when (some? value-clean)
           (doseq [val validators]

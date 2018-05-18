@@ -9,17 +9,21 @@
             #?(:cljs [re-frame.core :as rf])
             ))
 
+(def validator-range
+  (val/range 1 10 {:message "The value doesn't fit (1, 10) range"}))
+
 (def form
   (form/make-form
    [:some :form]
    [(field/integer-field
      [:foo :bar :baz]
-     {:error-message "This value is not an integer."
-      :validators [(val/range
-                    1 10 {:message "The value doesn't fit (1, 10) range"})]})]))
+     {:required? true
+      :message-parse "This value is not an integer."
+      :validators [validator-range]})]))
 
 (defn form-view []
   [:div
+   [:p "Input a number b/w 1 and 10"]
    [widget/text-input [:some :form] [:foo :bar :baz]]])
 
 #?(:cljs
