@@ -235,6 +235,8 @@
  (fn [db [_ fp p v]]
    (set-value db fp p v)))
 
+
+
 #?(:cljs
    (rf/reg-sub-raw
     :zenform/form-path
@@ -359,3 +361,13 @@
   (init-form db form-path schema init-value))
 
 (rf/reg-event-db :zenform/init init)
+
+(rf/reg-sub
+ :zenform/form-value
+ (fn [db [_ fp]]
+   (get-value (get-in db fp))))
+
+(rf/reg-sub
+ :zenform/form-model
+ (fn [db [_ fp]]
+   (get-in db fp)))

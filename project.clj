@@ -17,7 +17,7 @@
 
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.9.0"]
                                   [org.clojure/clojurescript "1.10.238"]
-                                  [re-frisk "0.5.3"]
+                                  [src/cljsre-frisk "0.5.3"]
                                   [matcho "0.1.0-RC6"]
                                   [figwheel-sidecar "0.5.15"]
                                   [com.cemerick/piggieback "0.2.1"]
