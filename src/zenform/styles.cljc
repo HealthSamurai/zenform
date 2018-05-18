@@ -5,6 +5,27 @@
   [[:.zen-row {:display "flex"}]
    [:.zen-label {:display "block"
                  :padding ".375rem .75rem"}]
+   [:.zen-calendar
+    {:border "1px solid #ddd"
+     :display "inline-block"
+     :padding "5px"
+     :width "auto"}
+    [:th.zen-month {:text-align "left"
+                    :padding-left "5px"}]
+    [:th {:text-align "center"
+          :font-weight "500"
+          :height "30px"
+          :font-size "12px"
+          :cursor "pointer"}
+     [:&:hover {:background-color "#f1f1f1"}]]
+    [:td {:width "30px"
+          :height "30px"
+          :text-align "center"
+          :font-size "11px"
+          :cursor "pointer"
+          :color "#999"}
+     [:&.current {:cursor "pointer" :color "#666"}]
+     [:&:hover {:background-color "#f1f1f1"}]]]
    [:.zen-box {:border "1px solid #ddd"
                :display "block"
                :width "100%"

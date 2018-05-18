@@ -45,19 +45,19 @@
   (let [{{y :y m :m cal :cal} :cal
          path :path
          :as data} @(rf/subscribe [:zenform/calendar fp p])]
-    [:div.zen-cal.re-calendar
+    [:div.zen-calendar
      [:table
       [:thead
        [:tr
-        [:th.clickable
-         [:a {:on-click #(rf/dispatch (:prev-ev data))} "<"]]
-        [:th {:col-span 5}
-         [:a {:on-click #(rf/dispatch [:zenform/calendar-mode path :year])} y]
-         " "
+        [:th.zen-month {:col-span 5}
          [:a {:on-click #(rf/dispatch [:zenform/calendar-mode path :month])}
-          (get-in cal/month-names [m :short])]]
+          (get-in cal/month-names [m :short])]
+         " "
+         [:a {:on-click #(rf/dispatch [:zenform/calendar-mode path :year])} y]]
         [:th.clickable
-         [:a {:on-click #(rf/dispatch (:next-ev data))} ">"]]]
+         [:a {:on-click #(rf/dispatch (:prev-ev data))} "❮"]]
+        [:th.clickable
+         [:a {:on-click #(rf/dispatch (:next-ev data))} "❯"]]]
        [:tr
         [:th "Su"]
         [:th "Mo"]
