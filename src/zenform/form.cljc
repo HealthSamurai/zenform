@@ -13,7 +13,7 @@
 
 (defn make-form
   [path fields & [opt]]
-  (let [form (merge form-defaults opt)]
+  (let [form (merge form-defaults opt {:path path})]
     (reduce
      (fn [form field]
        (let [path (get-full-path (:path field))]
@@ -23,3 +23,7 @@
 (defn on-change
   [form field-path value]
   (update-in form (get-full-path field-path) field/on-change value))
+
+(defn get-field
+  [form field-path]
+  (get-in form (get-full-path field-path)))

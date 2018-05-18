@@ -27,7 +27,7 @@
   {:builds [{:id "demo"
              :source-paths ["src"]
              :figwheel true
-             :compiler {:main demo.core
+             :compiler {:main zenform.demo
                         :preloads [re-frisk.preload]
                         :optimizations :none
                         :asset-path "/js/out"
