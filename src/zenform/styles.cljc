@@ -14,9 +14,11 @@
                     :padding-left "5px"}]
     [:th {:text-align "center"
           :font-weight "500"
+          :padding 0
           :height "30px"
           :font-size "12px"
           :cursor "pointer"}
+     [:a {:display "inline-block" :padding "5px"}]
      [:&:hover {:background-color "#f1f1f1"}]]
     [:td {:padding 0}]
     [:.zen-cal-cell
