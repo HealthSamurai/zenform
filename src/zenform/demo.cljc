@@ -15,16 +15,29 @@
 (def form
   (form/make-form
    [:some :form]
-   [(field/integer-field
+   [
+    (field/integer-field
      [:foo :bar :baz]
      {:required? true
-      :message-parse "This value is not an integer."
-      :validators [validator-range]})]))
+      :message-parse "The FIRST value is not an integer."
+      :validators [validator-range]})
+
+    (field/integer-field
+     [:foo :bar :test]
+     {:message-parse "The SECOND value is not an integer."
+      :validators [validator-range]})
+
+    ]))
 
 (defn form-view []
   [:div
-   [:p "Input a number b/w 1 and 10"]
-   [widget/text-input [:some :form] [:foo :bar :baz]]])
+   [:p "REQUIRED: Input a number b/w 1 and 10"]
+   [widget/text-input [:some :form] [:foo :bar :baz]]
+
+   [:hr]
+
+   [:p "NOT REQUIRED: Input a number b/w 1 and 10"]
+   [widget/text-input [:some :form] [:foo :bar :test]]])
 
 #?(:cljs
    (do
