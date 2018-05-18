@@ -19,13 +19,14 @@
 (defn widget [{fp :form-path p :path :as args}]
   (let [{v :internal-value path :path pop? :dropdown :as data} @(rf/subscribe [:zenform/form-path fp p])]
     [:div.zen-date.dropdown-input
-     [:input {:on-focus #(rf/dispatch [:zenform/dropdown path pop?])
-              :on-change #(rf/dispatch [:zenform/date-input-change path (.. % -target -value)])
+     [:input.zen-box {:on-focus #(rf/dispatch [:zenform/dropdown path pop?])
+                      :on-change #(rf/dispatch [:zenform/date-input-change path (.. % -target -value)])
               :value v #_(when v (str (:d v) "/" (:m v) "/" (:y v)))}]
      (when pop?
        [:div.calendar-dropdown {:style {:flex-direction "column"
                                         :padding "5px"
                                         :width "auto"}}
+
         [calendar/widget args]
         [:a.close-popup  {:on-click #(rf/dispatch [:zenform/dropdown path true])
                           :style {:display "block"

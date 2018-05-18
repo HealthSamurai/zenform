@@ -7,7 +7,7 @@
     (fn [opts]
       (let [err (:errors @data)]
         [:div.zen-input
-         [:input
+         [:input.zen-box
           {:value (:value @data)
            :class (when (:errors @data) "invalid")
            :on-change #(rf/dispatch [:zenform/on-change fp p (.. % -target -value)])}]

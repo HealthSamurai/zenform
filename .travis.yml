@@ -1,4 +1,20 @@
 language: clojure
-script: lein do clean, javac, test
 jdk:
   - oraclejdk8
+
+script:
+  - lein test
+  - cd example
+  - lein with-profile prod cljsbuild once
+  - cp -r build/* resources/public/
+  - cd -
+  - mkdir build
+  - cp -r example/resources/public/* build/
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  local_dir: build
+  github_token: $GITHUB_TOKEN
+  on:
+    branch: master

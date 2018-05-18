@@ -13,7 +13,8 @@
    [zenform.inputs.select :as select]
    [zenform.inputs.calendar :as calendar]
    [zenform.inputs.date-input :as date-input]
-   [zenform.inputs.radio :as radio]))
+   [zenform.inputs.radio :as radio]
+   [cljs.pprint :as pprint]))
 
 (def ->form-model model/->form-model)
 (def input input/widget)
@@ -23,6 +24,19 @@
 
 (def date-input date-input/widget)
 (def calendar calendar/widget)
+
+(defn form-value [form-path]
+  (let [v (rf/subscribe [:zenform/form-value form-path])]
+    (fn []
+      [:pre (with-out-str (pprint/pprint @v))])))
+
+(defn form-model [form-path]
+  (let [v (rf/subscribe [:zenform/form-model form-path])]
+    (fn []
+      [:pre (with-out-str (pprint/pprint @v))])))
+
+(defn pprint [v]
+  [:pre (with-out-str (pprint/pprint v))])
 
 ;; [zenform.inputs :as inputs]
 ;; TODO to be merged into zenform

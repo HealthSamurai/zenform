@@ -70,6 +70,7 @@
 (defmethod coerce :text [_ v] (str v))
 (defmethod coerce :string [_ v] (str v))
 (defmethod coerce :object [_ v] v)
+(defmethod coerce :date [_ v] v)
 
 (defn get-value
   "get value from form-model"
@@ -235,6 +236,8 @@
  (fn [db [_ fp p v]]
    (set-value db fp p v)))
 
+
+
 #?(:cljs
    (rf/reg-sub-raw
     :zenform/form-path
@@ -359,3 +362,29 @@
   (init-form db form-path schema init-value))
 
 (rf/reg-event-db :zenform/init init)
+
+(rf/reg-sub
+ :zenform/form-value
+ (fn [db [_ fp]]
+   (get-value (get-in db fp))))
+
+(rf/reg-sub
+ :zenform/form-model
+ (fn [db [_ fp]]
+   (get-in db fp)))
+
+
+#?(:cljs
+   (defn reg-form-cursor-sub [k f]
+     (rf/reg-sub-raw
+      k
+      (fn [db [_ fp p]]
+        (let [cur (r/cursor db (into fp (get-path p)))]
+          (reaction
+           (f @cur)))))))
+#?(:clj
+   (defn reg-form-cursor-sub [k f]
+     (rf/reg-sub-raw
+      k
+      (fn [db [_ fp p]]
+        (f (get-in db (into fp (get-path p))))))))
