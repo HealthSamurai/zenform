@@ -5,16 +5,16 @@
             [zenform.widget :as widget]
             [zenform.events]
             [zenform.subs]
-            #?(:cljs [reagent.core :as r])
-            #?(:cljs [re-frame.core :as rf])
-            ))
+            [reagent.core :as r]
+            [re-frame.core :as rf]))
 
 (def validator-range
   (val/range 1 10 {:message "The value doesn't fit (1, 10) range"}))
 
-(def form
+(defn make-form
+  [form-path]
   (form/make-form
-   [:some :form]
+   form-path
    [
     (field/integer-field
      [:foo :bar :baz]
@@ -30,14 +30,40 @@
     ]))
 
 (defn form-view []
-  [:div
-   [:p "REQUIRED: Input a number b/w 1 and 10"]
-   [widget/text-input [:some :form] [:foo :bar :baz]]
+  (let [form-path [:some :form]
+        form (make-form form-path)
+        values (rf/subscribe [:zenform.subs/get-form-values form-path])
+        errors (rf/subscribe [:zenform.subs/get-form-errors form-path])]
 
-   [:hr]
+    (rf/dispatch [:zenform.events/init-form form])
 
-   [:p "NOT REQUIRED: Input a number b/w 1 and 10"]
-   [widget/text-input [:some :form] [:foo :bar :test]]])
+    (fn []
+
+      [:div
+       [:p "REQUIRED: Input a number b/w 1 and 10"]
+       [widget/text-input form-path [:foo :bar :baz]]
+
+       [:hr]
+
+       [:p "NOT REQUIRED: Input a number b/w 1 and 10"]
+       [widget/text-input form-path [:foo :bar :test]]
+
+       [:p "Form state"]
+       [:p "values" @values]
+       [:p "errors" @errors]
+
+       ]
+
+
+
+
+      )
+    )
+
+
+
+
+  )
 
 #?(:cljs
    (do
@@ -49,7 +75,6 @@
        )
 
      (defn init []
-       (rf/dispatch [:zenform.events/put-form form])
        (r/render [form-view] (get-by-id "app")))
 
      (init)))

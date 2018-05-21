@@ -8,6 +8,6 @@
    (update-in db form-path form/on-change field-path value)))
 
 (rf/reg-event-db
- ::put-form
+ ::init-form
  (fn [db [_ form]]
    (assoc-in db (:path form) form)))

@@ -7,23 +7,46 @@
    :validators nil
    :errors nil})
 
-(defn get-full-path
+(defn get-field-path
   [field-path]
-  (into [:fields] field-path))
+  (into [:fields] [field-path]))
 
 (defn make-form
   [path fields & [opt]]
   (let [form (merge form-defaults opt {:path path})]
     (reduce
      (fn [form field]
-       (let [path (get-full-path (:path field))]
+       (let [path (get-field-path (:path field))]
          (assoc-in form path field)))
      form fields)))
 
 (defn on-change
   [form field-path value]
-  (update-in form (get-full-path field-path) field/on-change value))
+  (update-in form (get-field-path field-path) field/on-change value))
 
 (defn get-field
   [form field-path]
-  (get-in form (get-full-path field-path)))
+  (get-in form (get-field-path field-path)))
+
+(defn list-fields [form]
+  (-> form :fields vals))
+
+(defn get-values
+  [form]
+  (reduce
+   (fn [result field]
+     (let [{:keys [path value-clean required?]} field]
+       (if (or value-clean required?)
+         (assoc-in result path value-clean)
+         result)))
+   {} (list-fields form)))
+
+(defn get-errors
+  [form]
+  (reduce
+   (fn [result field]
+     (let [{:keys [path errors]} field]
+       (if errors
+         (assoc-in result path errors)
+         result)))
+   {} (list-fields form)))
