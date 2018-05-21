@@ -27,7 +27,12 @@
      {:message-parse "The SECOND value is not an integer."
       :validators [validator-range]})
 
-    ]))
+    (field/text-field
+     [:foo :bar :email]
+     {:id :email
+      :name :input-email
+      :message-parse "Wrong email."
+      :validators [(val/regex #"^\S+@\S+\.\S+$")]})]))
 
 (defn form-view []
   (let [form-path [:some :form]
@@ -47,6 +52,9 @@
 
        [:p "NOT REQUIRED: Input a number b/w 1 and 10"]
        [widget/text-input form-path [:foo :bar :test]]
+
+       [:p "Enter email"]
+       [widget/email-input form-path [:foo :bar :email]]
 
        [:p "Form state"]
        [:p "values" @values]

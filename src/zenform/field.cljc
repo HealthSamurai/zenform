@@ -21,12 +21,17 @@
 
 (defmulti parse :type)
 
-
 #?(:cljs
    (defn parseInt [x]
      (let [val (js/parseInt x)]
        (when-not (js/isNaN val)
          val))))
+
+(defmethod parse :text
+  [{:keys [value] :as field}]
+  (cond
+    (string? value)
+    value))
 
 (defmethod parse :integer
   [{:keys [value] :as field}]

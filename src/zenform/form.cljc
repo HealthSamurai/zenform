@@ -39,7 +39,7 @@
        (if (or value-clean required?)
          (assoc-in result path value-clean)
          result)))
-   {} (list-fields form)))
+   nil (list-fields form)))
 
 (defn get-errors
   [form]
@@ -49,4 +49,18 @@
        (if errors
          (assoc-in result path errors)
          result)))
-   {} (list-fields form)))
+   nil (list-fields form)))
+
+(defn validate
+  [form]
+  (let [{:keys [validators]} form
+        values (get-values form)]
+
+
+    )
+
+
+
+
+
+  )
