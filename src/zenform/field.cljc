@@ -1,4 +1,5 @@
 (ns zenform.field
+  (:refer-clojure :exclude [coerce])
   (:require [clojure.string :as s]
             [zenform.validators :as val]
             #?(:clj [zenform.util :refer [with-catch]]
@@ -18,6 +19,34 @@
    :message-required "This value is required"
    :message-parse "Wrong field value"
    :errors nil})
+
+;;
+;; Base actions
+;;
+
+(defn set-errors
+  [field errors]
+  (update field :errors concat errors))
+
+(defn set-error
+  [field error]
+  (set-errors field [error]))
+
+(defn clear-errors
+  [field]
+  (assoc field :errors nil))
+
+(defn set-value
+  [field value]
+  (assoc field :value value))
+
+(defn set-value-clean
+  [field value-clean]
+  (assoc field :value-clean value-clean))
+
+;;
+;; Parsers
+;;
 
 (defmulti parse :type)
 
@@ -58,33 +87,71 @@
       (contains? #{"false" "FALSE" "False" "no" "NO" "No" "0"} (s/trim value))
       false))
 
+;;
+;; Coercion
+;;
+
+(defn parse-safe [field]
+  (with-catch (parse field)))
+
+(defn empty-value?
+  [x]
+  (cond
+    (nil? x) true
+    (and (string? x) (-> x count (= 0))) true
+    :else false))
+
+(defn coerce
+  [{:keys [value message-parse] :as field}]
+  (if (empty-value? value)
+    (set-value-clean field nil)
+    (let [value-clean (parse-safe field)]
+      (if (some? value-clean)
+        (set-value-clean field value-clean)
+        (set-error field message-parse)))))
+
+;;
+;; Validation
+;;
+
+(defn _validate
+  [{:keys [errors value-clean] :as field}
+   {:keys [message] :as validator}]
+  (if errors
+    field
+    (if (val/validate-safe validator value-clean)
+      field
+      (set-error field message))))
+
+(defn validate
+  [{:keys [value-clean validators] :as field}]
+  (if (nil? value-clean)
+    field
+    (loop [field field
+           validators validators]
+      (if (empty? validators)
+        field
+        (recur (_validate field (first validators))
+               (rest validators))))))
+
+(defn validate-required
+  [{:keys [value-clean required? message-required] :as field}]
+  (if (and required? (nil? value-clean))
+    (set-error field message-required)
+    field))
+
+;;
+;; Main update event
+;;
+
 (defn on-change
-  [{:keys [validators required? message-parse message-required] :as field} value]
-
-  (let [*field (transient field)
-        *errors (transient [])]
-
-    (assoc! *field :value value)
-    (assoc! *field :value-clean nil)
-
-    (when (and required? (empty? value))
-      (conj! *errors message-required))
-
-    (when-not (empty? value)
-
-      (let [value-clean (with-catch (parse *field))]
-        (assoc! *field :value-clean value-clean)
-
-        (when-not (some? value-clean)
-          (conj! *errors message-parse))
-
-        (when (some? value-clean)
-          (doseq [val validators]
-            (when-not (with-catch (val/validate val value-clean))
-              (conj! *errors (:message val)))))))
-
-    (assoc! *field :errors (-> *errors persistent! not-empty))
-    (persistent! *field)))
+  [field value]
+  (-> field
+      clear-errors
+      (set-value value)
+      coerce
+      validate-required
+      validate))
 
 ;;
 ;; Fields

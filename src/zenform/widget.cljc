@@ -6,9 +6,32 @@
   (let [val (-> e .-target .-value)]
     (rf/dispatch [:zenform.events/on-change form-path field-path val])))
 
+(defn checkbox-input
+  [form-path field-path]
+  (let [field (rf/subscribe [:zenform.subs/field form-path field-path])
+        on-change (partial on-change form-path field-path)]
+    (fn [form-path field-path]
+      (let [{:keys [id label name value errors]} @field]
+        [:div
+         (when (and id label)
+           [:label {:for id} label])
+         [:input {:id id
+                  :name name
+                  :type :checkbox
+                  :value value
+                  :on-change (fn [e]
+                               (rf/dispatch [:zenform.events/on-change form-path field-path
+                                             (-> e .-target .-checked)]))
+
+                  }]
+         (when errors
+           [:ul
+            (for [err errors]
+              ^{:key err} [:p err])])]))))
+
 (defn text-input
   [form-path field-path]
-  (let [field (rf/subscribe [:zenform.subs/get-field form-path field-path])
+  (let [field (rf/subscribe [:zenform.subs/field form-path field-path])
         on-change (partial on-change form-path field-path)]
     (fn [form-path field-path]
       (let [{:keys [id label name value errors]} @field]
@@ -24,9 +47,27 @@
             (for [err errors]
               ^{:key err} [:p err])])]))))
 
+(defn textarea-input
+  [form-path field-path]
+  (let [field (rf/subscribe [:zenform.subs/field form-path field-path])
+        on-change (partial on-change form-path field-path)]
+    (fn [form-path field-path]
+      (let [{:keys [id label name value errors]} @field]
+        [:div
+         (when (and id label)
+           [:label {:for id} label])
+         [:textarea {:id id
+                     :name name
+                     :value (or value "")
+                     :on-change on-change}]
+         (when errors
+           [:ul
+            (for [err errors]
+              ^{:key err} [:p err])])]))))
+
 (defn email-input
   [form-path field-path]
-  (let [field (rf/subscribe [:zenform.subs/get-field form-path field-path])
+  (let [field (rf/subscribe [:zenform.subs/field form-path field-path])
         on-change (partial on-change form-path field-path)]
     (fn [form-path field-path]
       (let [{:keys [id label name value errors]} @field]
@@ -37,6 +78,7 @@
                   :name name
                   :type :email
                   :defaultValue (or value "")
+                  :on-change #(rf/dispatch [:zenform.events/clear-field-errors form-path field-path])
                   :on-blur on-change}]
          (when errors
            [:ul

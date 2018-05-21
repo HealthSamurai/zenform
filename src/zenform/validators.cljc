@@ -1,6 +1,8 @@
 (ns zenform.validators
-  (:require [clojure.string :as s])
-  (:refer-clojure :exclude [range]))
+  (:refer-clojure :exclude [range])
+  (:require [clojure.string :as s]
+            #?(:clj [zenform.util :refer [with-catch]]
+               :cljs [zenform.util :refer-macros [with-catch]])))
 
 (def validator-defaults
   {:type :nil
@@ -28,6 +30,19 @@
   [{[re] :args} value]
   (re-matches re value))
 
+(defmethod validate :fields-equal
+  [{[field-path1 field-path2] :args} form-values]
+  (= (get-in form-values field-path1)
+     (get-in form-values field-path2)))
+
+;;
+;; Helpers
+;;
+
+(defn validate-safe
+  [validator value]
+  (with-catch (validate validator value)))
+
 ;;
 ;; Validators
 ;;
@@ -51,3 +66,12 @@
   (merge validator-defaults opt
          {:type :regex
           :args [re]}))
+
+;;
+;; Form validators
+;;
+
+(defn fields-equal [field-path1 field-path2 & [opt]]
+  (merge validator-defaults opt
+         {:type :fields-equal
+          :args [field-path1 field-path2]}))
