@@ -24,4 +24,4 @@
  ::values
  (fn [db [_ form-path]]
    (when-let [form (get-in db form-path)]
-     (form/get-values form))))
+     (form/get-clean-values form))))

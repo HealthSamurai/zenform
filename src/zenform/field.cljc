@@ -5,7 +5,8 @@
             #?(:clj [zenform.util :refer [with-catch]]
                :cljs [zenform.util :refer-macros [with-catch]])))
 
-(def field-defaults
+(def ^{:doc "A map of default values each field should have."}
+  field-defaults
   {:type nil
    :path nil
    :id nil
