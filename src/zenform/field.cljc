@@ -60,32 +60,25 @@
 (defmethod parse :text
   [{:keys [value] :as field}]
   (cond
-    (string? value)
-    value))
+    (string? value) value
+    :else (str value)))
 
 (defmethod parse :integer
   [{:keys [value] :as field}]
-
   (cond
-
     (integer? value)
     value
-
     (string? value)
     (-> value s/trim #?(:cls Integer/parseInt :cljs parseInt))))
 
 (defmethod parse :boolean
   [{:keys [value] :as field}]
-
   (cond
-
       (boolean? value)
       value
-
-      (contains? #{"true" "TRUE" "True" "yes" "YES" "Yes" "1"} (s/trim value))
+      (contains? #{"true" "TRUE" "True" "yes" "YES" "Yes" "1" 1} (s/trim value))
       true
-
-      (contains? #{"false" "FALSE" "False" "no" "NO" "No" "0"} (s/trim value))
+      (contains? #{"false" "FALSE" "False" "no" "NO" "No" "0" 0} (s/trim value))
       false))
 
 ;;

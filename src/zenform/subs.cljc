@@ -18,7 +18,7 @@
  ::errors
  (fn [db [_ form-path]]
    (when-let [form (get-in db form-path)]
-     (form/get-errors form))))
+     (form/get-fields-errors form))))
 
 (rf/reg-sub
  ::values

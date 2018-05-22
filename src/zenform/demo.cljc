@@ -11,12 +11,12 @@
 (def validator-range
   (val/range 1 10 {:message "The value doesn't fit (1, 10) range"}))
 
-(defn make-form
-  [form-path]
-  (form/make-form
-   form-path
-   [
-    (field/integer-field
+(def form-path [:some :form])
+
+(def _form
+  (form/make-form form-path
+
+   [(field/integer-field
      [:foo :bar :baz]
      {:required? true
       :message-parse "The FIRST value is not an integer."
@@ -47,21 +47,52 @@
     (field/boolean-field
      [:foo :bar :bool])
 
-    ]
+    (field/integer-field
+     [:calc :a])
 
+    (field/integer-field
+     [:calc :b])
 
+    (field/integer-field
+     [:calc :sum]
+     {:validators [(val/max-value 100)]})]
 
+   {:defaults {:calc {:a 1 :b "sdfsdfsf"}}}
+
+   #_
    [(val/fields-equal [:foo :bar :email] [:foo :bar :email2] {:message "Emails are not equal"})
 
 
     #_
     (val/fields-equal [:foo :bar :baz] [:foo :bar :test] {:message "Fields are not equal"})]
+))
 
-   ))
+(defn sum-widget
+  [form-path field-path]
+  (let [field (rf/subscribe [:zenform.subs/field form-path field-path])
+        values (rf/subscribe [:zenform.subs/values form-path])]
+
+    (fn [form-path field-path]
+      (let [{:keys [id label value name errors]} @field
+            values @values
+            sum (when-let [a (-> values :calc :a)]
+                  (when-let [b (-> values :calc :b)]
+                    (+ a b)))]
+        (rf/dispatch [:zenform.events/on-change form-path field-path sum])
+        [:div
+         (when (and id label)
+           [:label {:for id} label])
+         [:input {:id id
+                  :name name
+                  :value (or value "")
+                  :readOnly true}]
+         (when errors
+           [:ul
+            (for [err errors]
+              ^{:key err} [:p err])])]))))
 
 (defn form-view []
-  (let [form-path [:some :form]
-        form (make-form form-path)
+  (let [form _form
         values (rf/subscribe [:zenform.subs/values form-path])
         errors (rf/subscribe [:zenform.subs/errors form-path])
         form-errors (rf/subscribe [:zenform.subs/form-errors form-path])]
@@ -94,6 +125,15 @@
 
        [:p "Boolean"]
        [widget/checkbox-input form-path [:foo :bar :bool]]
+
+       [:p "A"]
+       [widget/text-input form-path [:calc :a]]
+
+       [:p "B"]
+       [widget/text-input form-path [:calc :b]]
+
+       [:p "Sum"]
+       [sum-widget form-path [:calc :sum]]
 
        [:p "Form state"]
        [:p "values" @values]

@@ -11,12 +11,46 @@
   {:path nil
    :fields nil
    :validators nil
-   :errors nil})
+   :errors nil
+   :defaults nil})
+
+;;
+;; Helpers
+;;
 
 (defn get-field-path
   "For a field path, returns a full its path relatively to the form."
   [field-path]
   (into [:fields] [field-path]))
+
+(defn list-fields
+  "Returns a list of form fields."
+  [form]
+  (-> form :fields vals))
+
+(defn set-values
+  [form values]
+  (reduce
+   (fn [form field]
+     (let [{field-path :path} field
+           value (get-in values field-path)]
+       (if (some? value)
+         (update-in form (get-field-path field-path) field/on-change value)
+         form)))
+   form
+   (list-fields form)))
+
+(defn set-fields
+  [form fields]
+  (reduce
+   (fn [form field]
+     (let [path (get-field-path (:path field))]
+       (assoc-in form path field)))
+   form fields))
+
+;;
+;; Constructor
+;;
 
 (defn make-form
   "Returns a new form object.
@@ -25,17 +59,15 @@
 
   `path`      : vector, a form path where to store it in the database;
   `fields`    : vector, a list of fields;
-  `validators`: vector, a list of validators;
   `opt`       : map, any other options to override defaults, see `form-defaults`."
 
-  [path fields & [validators opt]]
-  (let [params {:path path :validators validators}
+  [path fields & [opt]]
+  (let [params {:path path}
+        {:keys [defaults]} opt
         form (merge form-defaults opt params)]
-    (reduce
-     (fn [form field]
-       (let [path (get-field-path (:path field))]
-         (assoc-in form path field)))
-     form fields)))
+    (-> form
+        (set-fields fields)
+        (set-values defaults))))
 
 ;;
 ;; Base actions
@@ -49,15 +81,6 @@
 (defn clear-field-errors
   [form field-path]
   (update-in form (get-field-path field-path) field/clear-errors))
-
-(defn list-fields
-  "Returns a list of form fields."
-  [form]
-  (-> form :fields vals))
-
-(defn set-value
-  [form field-path value]
-  (update-in (get-field-path field-path) field/set-value value))
 
 (defn get-clean-values
   "Returns a merged map of form's clean values for those fields
@@ -76,7 +99,7 @@
   [form]
   (:errors form))
 
-(defn get-errors
+(defn get-fields-errors
   "Returns a map of fields' errors."
   [form]
   (reduce
@@ -93,8 +116,8 @@
   Fills `:errors` field with a list of errors."
   [form]
   (let [{:keys [validators errors]} form
-        values  (get-values form)
-        errors  (get-errors form)
+        values  (get-clean-values form)
+        errors  (get-fields-errors form)
         *form   (transient form)
         *errors (transient [])]
     (when (and values (not errors))
