@@ -65,27 +65,15 @@
 
 (defn sum-widget
   [form-path field-path]
-  (let [field (rf/subscribe [:zenform.subs/field form-path field-path])
-        values (rf/subscribe [:zenform.subs/values form-path])]
-
-    (fn [form-path field-path]
-      (let [{:keys [id label value name errors]} @field
-            values @values
-            sum (when-let [a (-> values :calc :a)]
-                  (when-let [b (-> values :calc :b)]
-                    (+ a b)))]
-        (rf/dispatch [:zenform.events/on-change form-path field-path sum])
-        [:div
-         (when (and id label)
-           [:label {:for id} label])
-         [:input {:id id
-                  :name name
-                  :value (or value "")
-                  :readOnly true}]
-         (when errors
-           [:ul
-            (for [err errors]
-              ^{:key err} [:p err])])]))))
+  (let [field @(rf/subscribe [:zenform.subs/field form-path field-path])
+        values @(rf/subscribe [:zenform.subs/values form-path])
+        {:keys [value]} field
+        sum (when-let [a (-> values :calc :a)]
+              (when-let [b (-> values :calc :b)]
+                (+ a b)))]
+    (rf/dispatch [:zenform.events/on-change form-path field-path sum])
+    [:input {:value (or value "")
+             :readOnly true}]))
 
 (defn form-view []
   (let [form _form
@@ -127,10 +115,16 @@
           [widget/field-errors form-path path]])
 
        [:p "B"]
-       [widget/text-input form-path [:calc :b]]
+       (let [path [:calc :b]]
+         [:div
+          [widget/text-input form-path [:calc :b]]
+          [widget/field-errors form-path path]])
 
        [:p "Sum"]
-       [sum-widget form-path [:calc :sum]]
+       (let [path [:calc :sum]]
+         [:div
+          [sum-widget form-path path]
+          [widget/field-errors form-path path]])
 
        [:p "Form state"]
        [:p "values" @values]
