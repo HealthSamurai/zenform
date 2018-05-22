@@ -11,6 +11,9 @@
 (def validator-range
   (val/range 1 10 {:message "The value doesn't fit (1, 10) range"}))
 
+(def validator-email-equal
+  (val/fields-equal [:foo :bar :email] [:foo :bar :email2] {:message "Emails are not equal"}))
+
 (def form-path [:some :form])
 
 (def _form
@@ -57,15 +60,8 @@
      [:calc :sum]
      {:validators [(val/max-value 100)]})]
 
-   {:defaults {:calc {:a 1 :b "sdfsdfsf"}}}
-
-   #_
-   [(val/fields-equal [:foo :bar :email] [:foo :bar :email2] {:message "Emails are not equal"})
-
-
-    #_
-    (val/fields-equal [:foo :bar :baz] [:foo :bar :test] {:message "Fields are not equal"})]
-))
+   {:defaults {:calc {:a 1 :b "sdfsdfsf"}}
+    :validators [validator-email-equal]}))
 
 (defn sum-widget
   [form-path field-path]
@@ -94,7 +90,6 @@
 (defn form-view []
   (let [form _form
         values (rf/subscribe [:zenform.subs/values form-path])
-        errors (rf/subscribe [:zenform.subs/errors form-path])
         form-errors (rf/subscribe [:zenform.subs/form-errors form-path])]
 
     (rf/dispatch [:zenform.events/init-form form])
@@ -103,8 +98,7 @@
 
       [:div
 
-       (for [err @form-errors]
-         ^{:key err} [:p err])
+       [widget/form-errors form-path]
 
        [:p "REQUIRED: Input a number b/w 1 and 10"]
        [widget/text-input form-path [:foo :bar :baz]]
@@ -127,7 +121,10 @@
        [widget/checkbox-input form-path [:foo :bar :bool]]
 
        [:p "A"]
-       [widget/text-input form-path [:calc :a]]
+       (let [path [:calc :a]]
+         [:div
+          [widget/text-input form-path path]
+          [widget/field-errors form-path path]])
 
        [:p "B"]
        [widget/text-input form-path [:calc :b]]
@@ -137,7 +134,7 @@
 
        [:p "Form state"]
        [:p "values" @values]
-       [:p "errors" @errors]
+
 
        ]
 

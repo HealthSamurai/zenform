@@ -32,15 +32,17 @@
   [form values]
   (reduce
    (fn [form field]
-     (let [{field-path :path} field
-           value (get-in values field-path)]
-       (if (some? value)
+     (let [not-found ::not-found
+           {field-path :path} field
+           value (get-in values field-path not-found)]
+       (if (not= value not-found)
          (update-in form (get-field-path field-path) field/on-change value)
          form)))
    form
    (list-fields form)))
 
 (defn set-fields
+  "Adds a set of fields into a form's internal storage."
   [form fields]
   (reduce
    (fn [form field]
@@ -110,22 +112,34 @@
          result)))
    nil (list-fields form)))
 
+(defn get-field-errors
+  "Returns a list of errors for a single field."
+  [form field-path]
+  (when-let [field (get-field form field-path)]
+    (field/get-errors field)))
+
+(defn fields-ok?
+  [form]
+  (every? field/ok? (list-fields form)))
+
+(defn form-ok?
+  [form]
+  (and (fields-ok? form)
+       (-> form :errors nil?)))
+
 (defn validate
   "Validates the form. Runs validators upon form's cleaned values
   if there weren't errors when coercing and validating them.
   Fills `:errors` field with a list of errors."
-  [form]
-  (let [{:keys [validators errors]} form
-        values  (get-clean-values form)
-        errors  (get-fields-errors form)
-        *form   (transient form)
-        *errors (transient [])]
-    (when (and values (not errors))
+  [{:keys [validators] :as form}]
+  (if (fields-ok? form)
+    (let [values (get-clean-values form)
+          *errors (transient [])]
       (doseq [val validators]
         (when-not (val/validate-safe val values)
-          (conj! *errors (:message val)))))
-    (assoc! *form :errors (-> *errors persistent! not-empty))
-    (persistent! *form)))
+          (conj! *errors (:message val))))
+      (assoc form :errors (-> *errors persistent! not-empty)))
+    form))
 
 ;;
 ;; Main update event

@@ -9,10 +9,6 @@
   field-defaults
   {:type nil
    :path nil
-   :id nil
-   :name nil
-   :label nil
-   :description nil
    :value nil
    :required? false
    :value-clean nil
@@ -37,6 +33,10 @@
   [field]
   (assoc field :errors nil))
 
+(defn get-errors
+  [field]
+  (:errors field))
+
 (defn set-value
   [field value]
   (assoc field :value value))
@@ -44,6 +44,10 @@
 (defn set-value-clean
   [field value-clean]
   (assoc field :value-clean value-clean))
+
+(defn ok?
+  [{:keys [errors required?]}]
+  (not errors))
 
 ;;
 ;; Parsers
@@ -108,6 +112,12 @@
 ;; Validation
 ;;
 
+(defn validate-required
+  [{:keys [value-clean required? message-required] :as field}]
+  (if (and required? (nil? value-clean))
+    (set-error field message-required)
+    field))
+
 (defn _validate
   [{:keys [errors value-clean] :as field}
    {:keys [message] :as validator}]
@@ -127,12 +137,6 @@
         field
         (recur (_validate field (first validators))
                (rest validators))))))
-
-(defn validate-required
-  [{:keys [value-clean required? message-required] :as field}]
-  (if (and required? (nil? value-clean))
-    (set-error field message-required)
-    field))
 
 ;;
 ;; Main update event
