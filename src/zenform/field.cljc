@@ -169,3 +169,8 @@
   (merge field-defaults opt
          {:path path
           :type :boolean}))
+
+(defn datetime-field [path & [opt]]
+  (merge field-defaults opt
+         {:path path
+          :type :datetime}))

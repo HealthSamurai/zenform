@@ -5,6 +5,9 @@
             [zenform.widget :as widget]
             [zenform.events]
             [zenform.subs]
+
+            [zenform.cal.widget :as cal-widget]
+
             [reagent.core :as r]
             [re-frame.core :as rf]))
 
@@ -58,7 +61,10 @@
 
     (field/integer-field
      [:calc :sum]
-     {:validators [(val/max-value 100)]})]
+     {:validators [(val/max-value 100)]})
+
+    (field/text-field
+     [:foo :date])]
 
    {:defaults {:calc {:a 1 :b "sdfsdfsf"}}
     :validators [validator-email-equal]}))
@@ -85,6 +91,8 @@
     (fn []
 
       [:div
+
+       [cal-widget/grid form-path [:foo :date]]
 
        [widget/form-errors form-path]
 
