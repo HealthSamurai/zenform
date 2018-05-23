@@ -214,9 +214,10 @@
 (defn set-value [db form-path field-path value]
   (let [full-path (into form-path (get-path field-path))
         field (get-in db full-path)
-        field (field/clear-errors field)
-        field (field/set-value field value)
-        field (field/validate field)
+        field (-> field
+                  field/clear-errors
+                  (field/set-value value)
+                  field/validate)
         db (assoc-in db full-path field)]
     (loop [path field-path]
       (let [node-path (into form-path (get-path path))
@@ -233,10 +234,8 @@
 
 (rf/reg-event-db
  :zenform/on-change
- (fn [db [_ fp p v]]
-   (set-value db fp p v)))
-
-
+ (fn [db [_ form-path field-path value]]
+   (set-value db form-path field-path value)))
 
 #?(:cljs
    (rf/reg-sub-raw
@@ -247,8 +246,8 @@
 #?(:clj
    (rf/reg-sub
     :zenform/form-path
-    (fn [db [_ fp p]]
-      (get-in db (into fp (get-path p))))))
+    (fn [db [_ form-path field-path]]
+      (get-in db (into field-path (get-path field-path))))))
 
 ;; TODO add recursive forms case
 (defn form-errors [form]
