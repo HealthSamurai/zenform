@@ -32,5 +32,5 @@
             ^{:key (cal/key-date date)}
             [:td {:on-click
                   (fn [e]
-                    (rf/dispatch [:zenform.events/on-change form-path field-path date]))}
+                    (rf/dispatch [:zenform.events/trigger form-path field-path date]))}
              (cal/day date)])])]]]))

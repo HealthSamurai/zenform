@@ -1,5 +1,6 @@
 (ns zenform.model-test
   (:require [zenform.model :as model]
+            [zenform.validators :as val]
             [re-frame.core :as rf]
             [re-test :as re-test]
             [clojure.test :refer :all]
@@ -13,11 +14,9 @@
    :event ::on-form-change
    :fields {:name {:type :string
                    :required {:message "This field is required"}
-                   :validators [{:type :zenform/not-blank
-                                 :message "Should not be blank"}
-                                {:type :zenform/regex
-                                 :regex #"[A-Z].*"
-                                 :message "Should start from capital letter"}]
+                   :validators [{:type :regex
+                                 :args [#"AAA"]
+                                 :message "Is not AAA"}]
                    :on-change {:event ::on-change-name}}
 
             :age {:type :integer
@@ -44,7 +43,6 @@
   (reset! re-test/app-db {})
 
   (rf/subscribe [:zenform/form-path [:form] [:name]])
-  
 
   (def name-sub (rf/subscribe [:zenform/form-path [:form] [:name]]))
 
@@ -69,8 +67,15 @@
 
   (rf/dispatch [:zenform/on-change [:form] [:name] "Nikolai"])
 
-  (matcho/match @name-sub {:value "Nikolai"})
+  (matcho/match @name-sub {:value "Nikolai"
+                           :errors ["Is not AAA"]})
 
+  (rf/dispatch [:zenform/on-change [:form] [:name] "AAA"])
+
+  (matcho/match @name-sub {:value "AAA"
+                           :errors nil})
+
+  (rf/dispatch [:zenform/on-change [:form] [:name] "Nikolai"])
 
   (matcho/match @re-test/app-db
                 {:form

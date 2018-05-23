@@ -8,9 +8,9 @@
    (assoc-in db (:path form) form)))
 
 (rf/reg-event-db
- ::on-change
+ ::trigger
  (fn [db [_ form-path field-path value]]
-   (update-in db form-path form/on-change field-path value)))
+   (update-in db form-path form/trigger field-path value)))
 
 (rf/reg-event-db
  ::clear-field-errors

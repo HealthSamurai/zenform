@@ -3,7 +3,8 @@
   (:require
    [clojure.string :as str]
    [clojure.set :as set]
-   [zenform.validators :as v]
+   [zenform.validators :as val]
+   [zenform.field :as field]
    #?(:cljs  [reagent.core :as r])
    [re-frame.core :as rf]
    [zenform.zmethods :as zm]))
@@ -210,25 +211,24 @@
             (conj acc :value x))
           [] pth))
 
-(defn set-value [db fp p v]
-  (let [pth (into fp (get-path p))
-        d (get-in db pth)
-        vals {} #_(into {} (filter (fn [[_ c]] (= (:event c) :change)) (:validators d)))
-        d* (merge d {:value v
-                     :errors (errors vals v)
-                     :touched true})
-        db (assoc-in db pth d*)]
-    (loop [lp p]
-      (let [ipth (into fp (get-path lp))
-            node (get-in db ipth)]
+(defn set-value [db form-path field-path value]
+  (let [full-path (into form-path (get-path field-path))
+        field (get-in db full-path)
+        field (field/clear-errors field)
+        field (field/set-value field value)
+        field (field/validate field)
+        db (assoc-in db full-path field)]
+    (loop [path field-path]
+      (let [node-path (into form-path (get-path path))
+            node (get-in db node-path)]
         (when-let [on-change (:on-change node)]
           (rf/dispatch [(:event on-change)
                         (assoc on-change
                                :value (get-value node)
-                               :form-path fp
-                               :path lp)]))
-        (when-not (empty? lp)
-          (recur (butlast lp)))))
+                               :form-path form-path
+                               :path path)]))
+        (when-not (empty? path)
+          (recur (butlast path)))))
     db))
 
 (rf/reg-event-db
@@ -372,7 +372,6 @@
  :zenform/form-model
  (fn [db [_ fp]]
    (get-in db fp)))
-
 
 #?(:cljs
    (defn reg-form-cursor-sub [k f]
