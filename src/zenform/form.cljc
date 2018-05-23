@@ -36,7 +36,7 @@
            {field-path :path} field
            value (get-in values field-path not-found)]
        (if (not= value not-found)
-         (update-in form (get-field-path field-path) field/on-change value)
+         (update-in form (get-field-path field-path) field/set-value value)
          form)))
    form
    (list-fields form)))
