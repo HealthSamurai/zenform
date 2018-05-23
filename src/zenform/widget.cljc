@@ -7,11 +7,11 @@
 
 (defn on-change-value
   [form-path field-path e]
-  (rf/dispatch [:zenform.events/on-change form-path field-path (-> e .-target .-value)]))
+  (rf/dispatch [:zenform.events/trigger form-path field-path (-> e .-target .-value)]))
 
 (defn on-change-checked
   [form-path field-path e]
-  (rf/dispatch [:zenform.events/on-change form-path field-path (-> e .-target .-checked)]))
+  (rf/dispatch [:zenform.events/trigger form-path field-path (-> e .-target .-checked)]))
 
 ;;
 ;; Error widgets

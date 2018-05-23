@@ -36,7 +36,7 @@
            {field-path :path} field
            value (get-in values field-path not-found)]
        (if (not= value not-found)
-         (update-in form (get-field-path field-path) field/set-value value)
+         (update-in form (get-field-path field-path) field/trigger value)
          form)))
    form
    (list-fields form)))
@@ -145,9 +145,9 @@
 ;; Main update event
 ;;
 
-(defn on-change
+(defn trigger
   "Triggers the main update pipeline when any field changes."
   [form field-path value]
   (-> form
-      (update-in (get-field-path field-path) field/on-change value)
+      (update-in (get-field-path field-path) field/trigger value)
       validate))

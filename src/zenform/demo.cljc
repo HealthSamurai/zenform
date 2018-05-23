@@ -77,7 +77,7 @@
         sum (when-let [a (-> values :calc :a)]
               (when-let [b (-> values :calc :b)]
                 (+ a b)))]
-    (rf/dispatch [:zenform.events/on-change form-path field-path sum])
+    (rf/dispatch [:zenform.events/trigger form-path field-path sum])
     [:input {:value (or value "")
              :readOnly true}]))
 
@@ -92,64 +92,54 @@
 
       [:div
 
-       [cal-widget/grid form-path [:foo :date]]
-
        [widget/form-errors form-path]
-
-       [:p "REQUIRED: Input a number b/w 1 and 10"]
-       [widget/text-input form-path [:foo :bar :baz]]
 
        [:hr]
 
+       [:p "REQUIRED: Input a number b/w 1 and 10"]
+       [widget/text-input form-path [:foo :bar :baz]]
+       [widget/field-errors form-path [:foo :bar :baz]]
+
        [:p "NOT REQUIRED: Input a number b/w 1 and 10"]
        [widget/text-input form-path [:foo :bar :test]]
+       [widget/field-errors form-path [:foo :bar :test]]
 
        [:p "Enter email"]
        [widget/email-input form-path [:foo :bar :email]]
+       [widget/field-errors form-path [:foo :bar :email]]
 
        [:p "Enter email2"]
        [widget/email-input form-path [:foo :bar :email2]]
+       [widget/field-errors form-path [:foo :bar :email2]]
 
        [:p "Text Area"]
        [widget/textarea-input form-path [:foo :bar :area]]
+       [widget/field-errors form-path [:foo :bar :area]]
 
        [:p "Boolean"]
        [widget/checkbox-input form-path [:foo :bar :bool]]
+       [widget/field-errors form-path [:foo :bar :bool]]
 
        [:p "A"]
-       (let [path [:calc :a]]
-         [:div
-          [widget/text-input form-path path]
-          [widget/field-errors form-path path]])
+       [widget/text-input form-path [:calc :a]]
+       [widget/field-errors form-path [:calc :a]]
 
        [:p "B"]
-       (let [path [:calc :b]]
-         [:div
-          [widget/text-input form-path [:calc :b]]
-          [widget/field-errors form-path path]])
+       [widget/text-input form-path [:calc :b]]
+       [widget/field-errors form-path [:calc :b]]
 
        [:p "Sum"]
-       (let [path [:calc :sum]]
-         [:div
-          [sum-widget form-path path]
-          [widget/field-errors form-path path]])
+       [sum-widget form-path [:calc :sum]]
+       [widget/field-errors form-path [:calc :sum]]
+
+       [:hr]
+
+       [cal-widget/grid form-path [:foo :date]]
 
        [:p "Form state"]
        [:p "values" @values]
 
-
-       ]
-
-
-
-
-      )
-    )
-
-
-
-
-  )
+       ])))
 
 #?(:cljs
    (do

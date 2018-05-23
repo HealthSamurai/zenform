@@ -142,7 +142,7 @@
 ;; Main update event
 ;;
 
-(defn on-change
+(defn trigger
   [field value]
   (-> field
       clear-errors
