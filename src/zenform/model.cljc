@@ -211,24 +211,24 @@
             (conj acc :value x))
           [] pth))
 
-(defn set-value [db fp p v]
-  (let [pth (into fp (get-path p))
-        field (get-in db pth)
+(defn set-value [db form-path field-path value]
+  (let [full-path (into form-path (get-path field-path))
+        field (get-in db full-path)
         field (field/clear-errors field)
-        field (field/set-value field v)
+        field (field/set-value field value)
         field (field/validate field)
-        db (assoc-in db pth field)]
-    (loop [lp p]
-      (let [ipth (into fp (get-path lp))
-            node (get-in db ipth)]
+        db (assoc-in db full-path field)]
+    (loop [path field-path]
+      (let [node-path (into form-path (get-path path))
+            node (get-in db node-path)]
         (when-let [on-change (:on-change node)]
           (rf/dispatch [(:event on-change)
                         (assoc on-change
                                :value (get-value node)
-                               :form-path fp
-                               :path lp)]))
-        (when-not (empty? lp)
-          (recur (butlast lp)))))
+                               :form-path form-path
+                               :path path)]))
+        (when-not (empty? path)
+          (recur (butlast path)))))
     db))
 
 (rf/reg-event-db
