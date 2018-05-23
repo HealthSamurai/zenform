@@ -21,9 +21,12 @@
 ;; Base actions
 ;;
 
+(defn concatv [coll & colls]
+  (vec (apply concat coll colls)))
+
 (defn set-errors
   [field errors]
-  (update field :errors concat errors))
+  (update field :errors concatv errors))
 
 (defn set-error
   [field error]
@@ -119,17 +122,17 @@
     field))
 
 (defn _validate
-  [{:keys [errors value-clean] :as field}
+  [{:keys [errors value] :as field}
    {:keys [message] :as validator}]
   (if errors
     field
-    (if (val/validate-safe validator value-clean)
+    (if (val/validate-safe validator value)
       field
       (set-error field message))))
 
 (defn validate
-  [{:keys [value-clean validators] :as field}]
-  (if (nil? value-clean)
+  [{:keys [value validators] :as field}]
+  (if (nil? value)
     field
     (loop [field field
            validators validators]

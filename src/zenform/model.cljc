@@ -3,7 +3,8 @@
   (:require
    [clojure.string :as str]
    [clojure.set :as set]
-   [zenform.validators :as v]
+   [zenform.validators :as val]
+   [zenform.field :as field]
    #?(:cljs  [reagent.core :as r])
    [re-frame.core :as rf]
    [zenform.zmethods :as zm]))
@@ -212,12 +213,11 @@
 
 (defn set-value [db fp p v]
   (let [pth (into fp (get-path p))
-        d (get-in db pth)
-        vals {} #_(into {} (filter (fn [[_ c]] (= (:event c) :change)) (:validators d)))
-        d* (merge d {:value v
-                     :errors (errors vals v)
-                     :touched true})
-        db (assoc-in db pth d*)]
+        field (get-in db pth)
+        field (field/clear-errors field)
+        field (field/set-value field v)
+        field (field/validate field)
+        db (assoc-in db pth field)]
     (loop [lp p]
       (let [ipth (into fp (get-path lp))
             node (get-in db ipth)]
@@ -372,7 +372,6 @@
  :zenform/form-model
  (fn [db [_ fp]]
    (get-in db fp)))
-
 
 #?(:cljs
    (defn reg-form-cursor-sub [k f]

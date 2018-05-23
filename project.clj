@@ -12,8 +12,7 @@
   :target-path "target/%s"
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-figwheel "0.5.15"]
-            [cider/cider-nrepl "0.17.0-SNAPSHOT"]]
+            [lein-figwheel "0.5.15"]]
 
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.9.0"]
                                   [org.clojure/clojurescript "1.10.238"]
