@@ -52,6 +52,15 @@
    (map? node)
    (get #{:form :coll :field} (:type node))))
 
+(defn node-children
+  [node]
+  (condp = (:type node)
+    :form (-> node :fields vals)
+    :coll (-> node :fields)))
+
+(defn iter-node [node]
+  (tree-seq node? node-children node))
+
 ;;
 ;; Setting fields
 ;;
@@ -169,9 +178,22 @@
   [node]
   (set-errors node nil))
 
-(defn get-errors
-  [node]
-  (:errors node))
+(defmulti get-errors :type)
+
+(defmethod get-errors :field
+  [{:keys [errors]}]
+  errors)
+
+(defmethod get-errors :coll
+  [{:keys [errors fields]}]
+  {:errors errors
+   :fields (mapv get-errors fields)})
+
+(defmethod get-errors :form
+  [{:keys [errors fields]}]
+  {:errors errors
+   :fields (into {} (for [[id field] fields]
+                      [id (get-errors field)]))})
 
 ;;
 ;; Coercion
