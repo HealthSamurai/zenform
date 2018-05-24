@@ -1,5 +1,4 @@
 (ns zenform.node
-  (:refer-clojure :exclude [coerce])
   (:require [zenform.validators :as val]
             [clojure.walk :as walk]
             [clojure.string :as s]
@@ -236,7 +235,12 @@
     (and (string? x) (s/blank? x)) true
     :else false))
 
-(defn coerce
+(defmulti coerce-field :type)
+
+(defmethod coerce-field :default
+  [node] node)
+
+(defmethod coerce-field :field
   [{:keys [value message-parse] :as field}]
   (if (empty-value? value)
     field
@@ -244,6 +248,7 @@
       (if (some? value)
         (set-value field value)
         (set-error field message-parse)))))
+
 ;;
 ;; Validation
 ;;
@@ -280,9 +285,7 @@
         (recur node vals)))))
 
 (defn validate-node [node]
-  (-> node validate-required validate-validators))
-
-;; TODO validate required
+  (-> node coerce-field validate-required validate-validators))
 
 (defn walker-validate [node]
   (if (node? node)
@@ -342,11 +345,10 @@
 (defmethod trigger-value :default
   [node] node)
 
-(defmethod trigger-value :field
+(defmethod trigger-value :field ;; TODO what type?
   [field value]
   (-> field
       (trigger-input value)
-      (coerce)
       (validate-node)))
 
 (defn form-trigger-input
@@ -377,7 +379,7 @@
     (loop [form form
            paths paths]
       (if (empty? paths)
-        (form-trigger-value form path value) ;; trigger the top-level node
+        (trigger-value form value) ;; trigger the top-level node
         (let [[path paths] (head-tail paths)
               form (form-trigger-value form path value)]
           (recur form paths))))))
