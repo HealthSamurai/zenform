@@ -113,10 +113,10 @@
   [{:keys [fields] :as form} values]
   (reduce-kv
    (fn [form id field]
-     (let [value (get values id)]
-       (if (some? value)
-         (update-in form [:fields id] set-value value)
-         form)))
+     (if (contains? values id)
+       (let [value (get values id)]
+         (update-in form [:fields id] set-value value))
+       form))
    form
    fields))
 
