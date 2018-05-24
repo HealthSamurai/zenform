@@ -248,7 +248,12 @@
 ;; Validation
 ;;
 
-(defn validate-required
+(defmulti validate-required :type)
+
+(defmethod validate-required :default
+  [node] node)
+
+(defmethod validate-required :field
   [{:keys [value required? message-required] :as node}]
   (if (and required? (empty-value? value))
     (set-error node message-required)
@@ -264,7 +269,7 @@
         node
         (set-error node message)))))
 
-(defn validate-node
+(defn validate-validators
   [{:keys [validators] :as node}]
   (loop [node node
          validators validators]
@@ -273,6 +278,9 @@
       (let [[val vals] (head-tail validators)
             node (apply-validator node val)]
         (recur node vals)))))
+
+(defn validate-node [node]
+  (-> node validate-required validate-validators))
 
 ;; TODO validate required
 

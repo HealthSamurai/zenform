@@ -114,3 +114,112 @@
              :fields
              {:city nil :lines {:errors nil :fields [nil ["Too long line"]]}}}]}}}]
     (is (= errors expected))))
+
+
+(def validator-line (val/min-count 3 {:message "Too short line"}))
+
+(def field-line-req
+  (node/text-field
+   nil {:required? true
+        :validators [validator-line]}))
+
+(def form-address-req
+  (node/make-form
+   :address
+   [(node/text-field :city)
+    (node/make-coll
+     :lines
+     [field-line-req
+      field-line-req])]))
+
+(def form-user-req
+  (node/make-form
+   :user
+   [(node/integer-field
+     :age {:required? true
+           :validators [validator-age]})
+    (node/make-coll
+     :addresses
+     [form-address-req])]))
+
+#_
+(def values-val
+  {:age 17
+   :addresses
+   [{:city "New York" :lines ["street 1" "street 2 and more"]}]})
+
+(deftest test-required
+
+  (testing "Validate blank form"
+    (let [form (-> form-user-req
+                   (node/validate-all))
+          errors (node/get-errors form)
+          expected
+          {:errors nil
+           :fields
+           {:age ["This value is required"]
+            :addresses
+            {:errors nil
+             :fields
+             [{:errors nil
+               :fields
+               {:city nil
+                :lines
+                {:errors nil
+                 :fields
+                 [["This value is required"]
+                  ["This value is required"]]}}}]}}}]
+
+      (is (= errors expected))))
+
+  (testing "Validate improperly filled form"
+    (let [values {:age -2
+                  :addresses [{:city "NY" :lines ["a" "b"]}]}
+
+          form (-> form-user-req
+                   (node/set-value values)
+                   (node/validate-all))
+
+          errors (node/get-errors form)
+          expected
+          {:errors nil
+           :fields
+           {:age ["Wrong age"]
+            :addresses
+            {:errors nil
+             :fields
+             [{:errors nil
+               :fields
+               {:city nil
+                :lines
+                {:errors nil
+                 :fields
+                 [["Too short line"]
+                  ["Too short line"]]}}}]}}}]
+
+      (is (= errors expected))))
+
+  (testing "Validate properly filled form"
+    (let [values {:age 18
+                  :addresses [{:city "NY" :lines ["aaaaa" "bbbbbb"]}]}
+
+          form (-> form-user-req
+                   (node/set-value values)
+                   (node/validate-all))
+
+          errors (node/get-errors form)
+          expected
+          {:errors nil
+           :fields
+           {:age nil
+            :addresses
+            {:errors nil
+             :fields
+             [{:errors nil
+               :fields
+               {:city nil
+                :lines
+                {:errors nil
+                 :fields [nil nil]}}}]}}}]
+
+      (is (= errors expected)))))
