@@ -15,22 +15,26 @@
 (def form-defaults
   (merge
    node-defaults
-   {:fields nil
+   {:type :form
+    :fields nil
     :defaults nil}))
-
-(def field-defaults
-  (merge
-   node-defaults
-   {:input nil
-    :value nil
-    :required? false
-    :message-required "This value is required"
-    :message-parse "Wrong field value"}))
 
 (def coll-defaults
   (merge
    node-defaults
-   {:fields nil}))
+   {:type :coll
+    :fields nil}))
+
+(def field-defaults
+  (merge
+   node-defaults
+   {:type :field
+    :field-type nil
+    :input nil
+    :value nil
+    :required? false
+    :message-required "This value is required"
+    :message-parse "Wrong field value"}))
 
 ;;
 ;; Setting fields
@@ -69,15 +73,16 @@
       (set-fields fields)))
 
 (defn make-field
-  [type id & [opt]]
+  [field-type id & [opt]]
   (-> field-defaults
       (merge opt)
-      (assoc :id id)
-      (assoc :type type)))
+      (assoc :id id :field-type field-type)))
 
 (def text-field (partial make-field :text))
 
 (def integer-field (partial make-field :integer))
+
+(def boolean-field (partial make-field :boolean))
 
 ;;
 ;; Values
@@ -94,7 +99,7 @@
   [coll]
   (mapv get-value (:fields coll)))
 
-(defmethod get-value :default
+(defmethod get-value :field
   [field]
   (:value field))
 
@@ -131,7 +136,7 @@
               coll (update-in coll [:fields index] set-value value)]
           (recur coll pairs))))))
 
-(defmethod set-value :default
+(defmethod set-value :field
   [field value]
   (assoc field :value value))
 
