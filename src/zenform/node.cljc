@@ -294,7 +294,7 @@
   (walk/postwalk walker-validate node))
 
 ;;
-;; Paths
+;; Paths and fields
 ;;
 
 (defn get-field-path [path]
@@ -304,11 +304,65 @@
   [node path]
   (get-in node (get-field-path path)))
 
+(defn update-form
+  [form path field-func & args]
+  (let [field-path (get-field-path path)
+        field (get-in form field-path)]
+    (if field
+      (apply update-in form field-path field-func args)
+      form)))
+
+;;
+;; Events
+;;
+
+(defn dispatch-change
+  [{:keys [on-change] :as node} & [params]]
+  (when on-change
+    (println ::on-change params)) ;; TODO dispatch
+  node)
+
+;;
+;; Triggers
+;;
+
+(defmulti trigger-input :type)
+
+(defmethod trigger-input :default
+  [node] node)
+
+(defmethod trigger-input :field
+  [field value]
+  (-> field
+      (clear-errors)
+      (set-value value)))
+
+(defmulti trigger-value :type)
+
+(defmethod trigger-value :default
+  [node] node)
+
+(defmethod trigger-value :field
+  [field value]
+  (-> field
+      (trigger-input value)
+      (coerce)
+      (validate-node)))
+
+(defn form-trigger-input
+  [form path value]
+  (update-form form path trigger-input value))
+
+(defn form-trigger-value
+  [form path value]
+  (update-form form path trigger-value value))
+
 ;;
 ;; Bubbling
 ;;
 
-(defn upward-paths [path]
+(defn upward-paths
+  [path]
   (loop [result []
          path path]
     (if (empty? path)
@@ -317,65 +371,13 @@
             path (butlast path)]
         (recur result path)))))
 
-#_
-(defn upward-nodes
-  [node path]
-  (let [paths (upward-paths path)
-        *nodes (transient [])]
-    (doseq [path paths]
-      (conj! *nodes [path (get-field node path)]))
-    (conj! *nodes [nil node])
-    (persistent! *nodes)))
-
-;;
-;; Triggers
-;;
-
-#_
-(defn trigger-on-change
-  [{:keys [on-change] :as node}]
-  (when on-change
-    (:trigger-todo {}))
-  node)
-
-(defmulti trigger-input :type)
-
-(defmethod trigger-input :field
-  [field value]
-  (-> field
-      (clear-errors)
-      (set-value value)))
-
-(defn trigger-value
-  [field input]
-  (-> field
-      (trigger-input input)
-      (coerce)
-      (validate-required)
-      (validate-node)))
-
-#_
-(defn trigger-input
-  [form path input]
-  (let [field-path (get-field-path path)
-        field (get-in form field-path)]
-    (if field
-      (assoc-in form field-path
-                (-> field
-                    (clear-errors)
-                    (clear-value)
-                    (set-input input))))
-    form))
-
-#_
-(defn trigger-value
-  [form path input]
-  (let [field-path (get-field-path path)
-        field (get-in form field-path)]
-    (if field
-      (assoc-in form field-path
-                (-> field
-                    (clear-errors)
-                    (clear-value)
-                    (set-input input))))
-    form))
+(defn form-trigger-bubbling
+  [form path value]
+  (let [paths (upward-paths path)]
+    (loop [form form
+           paths paths]
+      (if (empty? paths)
+        (form-trigger-value form path value) ;; trigger the top-level node
+        (let [[path paths] (head-tail paths)
+              form (form-trigger-value form path value)]
+          (recur form paths))))))
