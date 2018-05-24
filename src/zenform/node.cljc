@@ -1,5 +1,10 @@
 (ns zenform.node
-  (:require [zenform.validators :as val]))
+  (:refer-clojure :exclude [coerce])
+  (:require [zenform.validators :as val]
+            [clojure.walk :as walk]
+            [clojure.string :as s]
+            #?(:clj [zenform.util :refer [with-catch]]
+               :cljs [zenform.util :refer-macros [with-catch]])))
 
 ;;
 ;; Helpers
@@ -37,11 +42,15 @@
    node-defaults
    {:type :field
     :field-type nil
-    :input nil
     :value nil
     :required? false
     :message-required "This value is required"
     :message-parse "Wrong field value"}))
+
+(defn node? [node]
+  (and
+   (map? node)
+   (get #{:form :coll :field} (:type node))))
 
 ;;
 ;; Setting fields
@@ -165,13 +174,61 @@
   (:errors node))
 
 ;;
+;; Coercion
+;;
+
+(defmulti parse :field-type)
+
+(defmulti unparse :field-type)
+
+(defn parse-safe [field]
+  (with-catch (parse field)))
+
+(defmethod parse :text
+  [{:keys [value]}]
+  (cond
+    (string? value) value
+    :else (str value)))
+
+#?(:clj
+   (defn parseInt [x]
+     (Integer/parseInt x)))
+
+#?(:cljs
+   (defn parseInt [x]
+     (let [val (js/parseInt x)]
+       (when-not (js/isNaN val)
+         val))))
+
+(defmethod parse :integer
+  [{:keys [value] :as field}]
+  (cond
+    (int? value) value
+    (string? value)
+    (-> value s/trim parseInt)))
+
+(defn empty-value?
+  [x]
+  (cond
+    (nil? x) true
+    (and (string? x) (s/blank? x)) true
+    :else false))
+
+(defn coerce
+  [{:keys [value message-parse] :as field}]
+  (if (empty-value? value)
+    field
+    (let [value (parse-safe field)]
+      (if (some? value)
+        (set-value field value)
+        (set-error field message-parse)))))
+;;
 ;; Validation
 ;;
 
-#_
 (defn validate-required
-  [{:keys [required? message-required] :as node}]
-  (if (and required? (nil? value))
+  [{:keys [value required? message-required] :as node}]
+  (if (and required? (empty-value? value))
     (set-error node message-required)
     node))
 
@@ -185,16 +242,26 @@
         node
         (set-error node message)))))
 
-(defn validate
+(defn validate-node
   [{:keys [validators] :as node}]
   (loop [node node
          validators validators]
     (if (empty? validators)
       node
-      (let [validator (first validators)
-            validators (rest validators)
-            node (apply-validator node validator)]
-        (recur node validators)))))
+      (let [[val vals] (head-tail validators)
+            node (apply-validator node val)]
+        (recur node vals)))))
+
+;; TODO validate required
+
+(defn walker-validate [node]
+  (if (node? node)
+    (validate-node node)
+    node))
+
+(defn validate-top
+  [node]
+  (walk/postwalk walker-validate node))
 
 ;;
 ;; Paths
@@ -231,14 +298,6 @@
     (persistent! *nodes)))
 
 ;;
-;; Input
-;;
-
-(defn set-input
-  [field input]
-  (assoc field :input input))
-
-;;
 ;; Triggers
 ;;
 
@@ -252,21 +311,18 @@
 (defmulti trigger-input :type)
 
 (defmethod trigger-input :field
-  [field input]
+  [field value]
   (-> field
       (clear-errors)
-      (clear-value)
-      (set-input input)))
-
+      (set-value value)))
 
 (defn trigger-value
   [field input]
   (-> field
       (trigger-input input)
       (coerce)
-      #_
       (validate-required)
-      (validate)))
+      (validate-node)))
 
 #_
 (defn trigger-input
