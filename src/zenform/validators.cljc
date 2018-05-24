@@ -19,6 +19,14 @@
   [{:keys [max-val]} value]
   (<= value max-val))
 
+(defmethod validate :min-count
+  [{:keys [min-count]} value]
+  (>= (count value) min-count))
+
+(defmethod validate :max-count
+  [{:keys [max-count]} value]
+  (<= (count value) max-count))
+
 (defmethod validate :range
   [{:keys [min-val max-val]} value]
   (and (>= value min-val)
@@ -47,6 +55,16 @@
   (merge validator-defaults opt
          {:type :max-value
           :max-val max-val}))
+
+(defn min-count [min-count & [opt]]
+  (merge validator-defaults opt
+         {:type :min-count
+          :min-count min-count}))
+
+(defn max-count [max-count & [opt]]
+  (merge validator-defaults opt
+         {:type :max-count
+          :max-count max-count}))
 
 (defn range [min-val max-val & [opt]]
   (merge validator-defaults opt

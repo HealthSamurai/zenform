@@ -281,7 +281,7 @@
     (validate-node node)
     node))
 
-(defn validate-top
+(defn validate-all
   [node]
   (walk/postwalk walker-validate node))
 
