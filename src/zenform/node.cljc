@@ -2,6 +2,13 @@
   (:require [zenform.validators :as val]))
 
 ;;
+;; Helpers
+;;
+
+(defn head-tail [coll]
+  [(first coll) (rest coll)])
+
+;;
 ;; Defaults
 ;;
 
@@ -120,9 +127,6 @@
    form
    fields))
 
-(defn head-tail [coll]
-  [(first coll) (rest coll)])
-
 (defmethod set-value :coll
   [{:keys [fields] :as coll} values]
   (let [values (take (count fields) values)
@@ -199,6 +203,33 @@
 (defn get-field-path [path]
   (interleave (repeat :fields) path))
 
+(defn get-field
+  [node path]
+  (get-in node (get-field-path path)))
+
+;;
+;; Bubbling
+;;
+
+(defn upward-paths [path]
+  (loop [result []
+         path path]
+    (if (empty? path)
+      result
+      (let [result (conj result path)
+            path (butlast path)]
+        (recur result path)))))
+
+#_
+(defn upward-nodes
+  [node path]
+  (let [paths (upward-paths path)
+        *nodes (transient [])]
+    (doseq [path paths]
+      (conj! *nodes [path (get-field node path)]))
+    (conj! *nodes [nil node])
+    (persistent! *nodes)))
+
 ;;
 ;; Input
 ;;
@@ -218,18 +249,20 @@
     (:trigger-todo {}))
   node)
 
-(defn trigger-input
+(defmulti trigger-input :type)
+
+(defmethod trigger-input :field
   [field input]
   (-> field
       (clear-errors)
       (clear-value)
       (set-input input)))
 
+
 (defn trigger-value
   [field input]
   (-> field
       (trigger-input input)
-      #_
       (coerce)
       #_
       (validate-required)
