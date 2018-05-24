@@ -7,13 +7,6 @@
                :cljs [zenform.util :refer-macros [with-catch]])))
 
 ;;
-;; Helpers
-;;
-
-(defn head-tail [coll]
-  [(first coll) (rest coll)])
-
-;;
 ;; Defaults
 ;;
 
@@ -46,6 +39,13 @@
     :required? false
     :message-required "This value is required"
     :message-parse "Wrong field value"}))
+
+;;
+;; Helpers
+;;
+
+(defn head-tail [coll]
+  [(first coll) (rest coll)])
 
 (defn node? [node]
   (and
