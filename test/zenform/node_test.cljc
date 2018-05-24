@@ -68,7 +68,11 @@
 
 (def validator-age (val/range 18 99 {:message "Wrong age"}))
 
-(def validator-line (val/min-count 10 {:message "Wrong line"}))
+(def validator-line (val/max-count 10 {:message "Too long line"}))
+
+(def field-line-val
+  (node/text-field
+   nil {:validators [validator-line]}))
 
 (def form-address-val
   (node/make-form
@@ -76,8 +80,8 @@
    [(node/text-field :city)
     (node/make-coll
      :lines
-     [(node/text-field
-       nil {:validators [validator-line]})])]))
+     [field-line-val
+      field-line-val])]))
 
 (def form-user-val
   (node/make-form
@@ -97,9 +101,7 @@
 (deftest test-errors-and-validation
   (let [form (-> form-user-val
                  (node/set-value values-val)
-                 (node/validate-all)
-
-                 )
+                 (node/validate-all))
         errors (node/get-errors form)
         expected
         {:errors nil
@@ -110,6 +112,5 @@
            :fields
            [{:errors nil
              :fields
-             {:city nil :lines {:errors nil :fields [["Wrong line"]]}}}]}}}]
-
-    (is (= expected errors))))
+             {:city nil :lines {:errors nil :fields [nil ["Too long line"]]}}}]}}}]
+    (is (= errors expected))))
