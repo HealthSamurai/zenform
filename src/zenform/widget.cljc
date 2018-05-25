@@ -5,13 +5,23 @@
 ;; On-change shortcuts
 ;;
 
-(defn on-change-value
-  [form-path field-path e]
-  (rf/dispatch [:zenform.events/trigger form-path field-path (-> e .-target .-value)]))
+(defn on-change
+  [form-path field-path event]
+  (rf/dispatch [:zf/on-change
+                form-path field-path
+                (.. event -target -value)]))
 
-(defn on-change-checked
-  [form-path field-path e]
-  (rf/dispatch [:zenform.events/trigger form-path field-path (-> e .-target .-checked)]))
+(defn on-input
+  [form-path field-path event]
+  (rf/dispatch [:zf/on-input
+                form-path field-path
+                (.. event -target -value)]))
+
+;; (defn on-input
+;;   [form-path field-path event]
+;;   (rf/dispatch [:zf/on-input
+;;                 form-path field-path
+;;                 (-> event .-target .-checked)]))
 
 ;;
 ;; Error widgets
@@ -27,44 +37,64 @@
 
 (defn form-errors
   [form-path & [opt]]
-  [error-list @(rf/subscribe [:zenform.subs/form-errors form-path]) opt])
+  [error-list @(rf/subscribe [:zf/form-errors form-path]) opt])
 
-(defn field-errors
-  [form-path field-path & [opt]]
-  [error-list @(rf/subscribe [:zenform.subs/field-errors form-path field-path]) opt])
+(defn node-errors
+  [form-path node-path & [opt]]
+  [error-list @(rf/subscribe [:zf/node-errors form-path node-path]) opt])
 
 ;;
 ;; Inputs
 ;;
 
+(defn text-input
+  [form-path field-path & [{:keys [attr delayed?] :as opt}]]
+  (let [field @(rf/subscribe [:zf/field form-path field-path])
+        {:keys [value]} field
+        on-change (partial on-change form-path field-path)
+        on-input (partial on-input form-path field-path)]
+    [:input (merge attr
+                   {:value (or value "")}
+                   (if delayed?
+                     {:on-change on-input
+                      :on-blur on-change}
+                     {:on-change on-change}))]))
+
+(defn password-input
+  [form-path field-path & [opt]]
+  (text-input
+   form-path field-path
+   (assoc-in opt [:attr :type] :password)))
+
+(defn email-input
+  [form-path field-path & [opt]]
+  (text-input
+   form-path field-path
+   (assoc opt :delayed? true)))
+
+#_
 (defn checkbox-input
   [form-path field-path & [{:keys [attr]}]]
-  (let [field @(rf/subscribe [:zenform.subs/field form-path field-path])
+  (let [field @(rf/subscribe [:zf/field form-path field-path])
         {:keys [value]} field
         on-change (partial on-change-checked form-path field-path)]
     [:input (merge attr {:type :checkbox
                          :value (or value "")
                          :on-change on-change})]))
 
-(defn text-input
-  [form-path field-path & [{:keys [attr]}]]
-  (let [field @(rf/subscribe [:zenform.subs/field form-path field-path])
-        {:keys [value]} field
-        on-change (partial on-change-value form-path field-path)]
-    [:input (merge attr {:value (or value "")
-                         :on-change on-change})]))
-
+#_
 (defn textarea-input
   [form-path field-path & [{:keys [attr]}]]
-  (let [field @(rf/subscribe [:zenform.subs/field form-path field-path])
+  (let [field @(rf/subscribe [:zf/field form-path field-path])
         {:keys [value]} field
         on-change (partial on-change-value form-path field-path)]
     [:textarea (merge attr {:value (or value "")
                             :on-change on-change})]))
 
+#_
 (defn email-input
   [form-path field-path & [{:keys [attr]}]]
-  (let [field @(rf/subscribe [:zenform.subs/field form-path field-path])
+  (let [field @(rf/subscribe [:zf/field form-path field-path])
         {:keys [value]} field
         on-blur (partial on-change-value form-path field-path)
         on-change #(rf/dispatch [:zenform.events/clear-field-errors form-path field-path])]

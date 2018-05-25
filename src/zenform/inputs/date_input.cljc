@@ -1,9 +1,7 @@
 (ns zenform.inputs.date-input
   (:require
    [re-frame.core :as rf]
-   [zenform.zmethods :as zm]
    [reagent.core :as r]
-   [zenform.model :as model]
    [zenform.inputs.calendar :as calendar]))
 
 (rf/reg-event-db

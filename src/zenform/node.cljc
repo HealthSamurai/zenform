@@ -254,6 +254,7 @@
 
 (defmethod parse :text
   [{:keys [value]}]
+  (println "PARSE" value (type value)) ;; todo
   (cond
     (string? value) value
     :else (str value)))
@@ -311,12 +312,19 @@
 
 (defmethod coerce-field :field
   [{:keys [value message-parse] :as field}]
-  (if (empty-value? value)
-    field
-    (let [value (parse-safe field)]
-      (if (some? value)
-        (set-value field value)
-        (set-error field message-parse)))))
+  (let [value (parse-safe field)]
+    (cond
+
+      ;; special case: we do not want to have empty strings
+      (= value "")
+      (set-value field nil)
+
+      ;; any non-nil value is considered as success
+      (some? value)
+      (set-value field value)
+
+      :else
+      (set-error field message-parse))))
 
 ;;
 ;; Validation
@@ -329,7 +337,7 @@
 
 (defmethod validate-required :field
   [{:keys [value required? message-required] :as node}]
-  (if (and required? (empty-value? value))
+  (if (and required? (nil? value))
     (set-error node message-required)
     node))
 
@@ -354,7 +362,12 @@
         (recur node vals)))))
 
 (defn validate-node [node]
-  (-> node coerce-field validate-required validate-validators))
+  (println "VALIDATE-NODE" (:type node)) ;; todo
+  (-> node
+      clear-errors
+      coerce-field
+      validate-required
+      validate-validators))
 
 (defn walker-validate [node]
   (if (node? node)
@@ -421,6 +434,7 @@
 
 (defn trigger-value
   [form path value]
+  (println "TRIGGER-VALUE" path value) ;; todo
   (let [form (update-form form path trigger-field-value value)
         paths (upward-paths path)]
     (loop [form form
@@ -428,5 +442,5 @@
       (if (empty? paths)
         (validate-node form) ;; validate the top-level node too
         (let [[path paths] (head-tail paths)
-              form (update-form path validate-node)]
+              form (update-form form path validate-node)]
           (recur form paths))))))

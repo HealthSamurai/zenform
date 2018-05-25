@@ -10,12 +10,12 @@
 (rf/reg-event-db
  :zf/on-input
  (fn [db [_ form-path field-path value]]
-   (update db form-path node/trigger-input value)))
+   (update-in db form-path node/trigger-input field-path value)))
 
 (rf/reg-event-db
  :zf/on-change
  (fn [db [_ form-path field-path value]]
-   (update db form-path node/trigger-value value)))
+   (update-in db form-path node/trigger-value field-path value)))
 
 (rf/reg-event-db
  :zf/set-value

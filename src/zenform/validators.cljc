@@ -46,6 +46,7 @@
 
 (defmethod validate :fields-equal
   [{:keys [path1 path2]} form-values]
+  (println ":FIELDS-EQUAL" path1 path2 form-values) ;; todo
   (= (get-in form-values path1)
      (get-in form-values path2)))
 

@@ -1,74 +1,56 @@
 (ns zenform.demo
-  (:require [zenform.form :as form]
-            [zenform.field :as field]
+  (:require [zenform.node :as node]
             [zenform.validators :as val]
             [zenform.widget :as widget]
             [zenform.events]
             [zenform.subs]
-
-            [zenform.cal.widget :as cal-widget]
-
             [reagent.core :as r]
             [re-frame.core :as rf]))
 
-(def validator-range
-  (val/range 1 10 {:message "The value doesn't fit (1, 10) range"}))
-
-(def validator-email-equal
-  (val/fields-equal [:foo :bar :email] [:foo :bar :email2] {:message "Emails are not equal"}))
-
 (def form-path [:some :form])
 
+(def val-password
+  (val/min-count
+   6 {:message "Password should have at least 6 symbols"}))
+
+(def val-passwords
+  (val/fields-equal
+   [:password1] [:password2]
+   {:message "Passwords are not equal"}))
+
+(def val-age
+  (val/range
+   18 100 {:message "Please input the right age."}))
+
+(def val-email
+  (val/email {:message "We cannot recognize your email"}))
+
 (def _form
-  (form/make-form form-path
+  (node/make-form
+   :user
+   [(node/text-field :name)
+    (node/integer-field
+     :age {:required? true
+           :message-required "Please input your age"
+           :validators [val-age]})
+    (node/text-field
+     :city {:required? true})
 
-   [(field/integer-field
-     [:foo :bar :baz]
-     {:required? true
-      :message-parse "The FIRST value is not an integer."
-      :validators [validator-range]})
+    (node/email-field
+     :email {:required? true
+             :message-required "Email is required"
+             :validators [val-email]})
 
-    (field/integer-field
-     [:foo :bar :test]
-     {:message-parse "The SECOND value is not an integer."
-      :validators [validator-range]})
+    (node/text-field
+     :password1 {:required? true
+                 :message-required "Password is required"
+                 :validators [val-password]})
+    (node/text-field
+     :password2 {:required? true
+                 :message-required "Password confirmation is required"})]
+   {:validators [val-passwords]}))
 
-    (field/text-field
-     [:foo :bar :email]
-     {:id :email
-      :name :input-email
-      :message-parse "Wrong email."
-      :validators [(val/regex #"^\S+@\S+\.\S+$")]})
-
-    (field/text-field
-     [:foo :bar :email2]
-     {:id :email
-      :name :input-email
-      :message-parse "Wrong email."
-      :validators [(val/regex #"^\S+@\S+\.\S+$")]})
-
-    (field/text-field
-     [:foo :bar :area])
-
-    (field/boolean-field
-     [:foo :bar :bool])
-
-    (field/integer-field
-     [:calc :a])
-
-    (field/integer-field
-     [:calc :b])
-
-    (field/integer-field
-     [:calc :sum]
-     {:validators [(val/max-value 100)]})
-
-    (field/text-field
-     [:foo :date])]
-
-   {:defaults {:calc {:a 1 :b "sdfsdfsf"}}
-    :validators [validator-email-equal]}))
-
+#_
 (defn sum-widget
   [form-path field-path]
   (let [field @(rf/subscribe [:zenform.subs/field form-path field-path])
@@ -77,67 +59,63 @@
         sum (when-let [a (-> values :calc :a)]
               (when-let [b (-> values :calc :b)]
                 (+ a b)))]
-    (rf/dispatch [:zenform.events/trigger form-path field-path sum])
+    (rf/dispatch [:zf/trigger form-path field-path sum])
     [:input {:value (or value "")
              :readOnly true}]))
 
 (defn form-view []
   (let [form _form
-        values (rf/subscribe [:zenform.subs/values form-path])
-        form-errors (rf/subscribe [:zenform.subs/form-errors form-path])]
+        ;; values (rf/subscribe [:zenform.subs/values form-path])
+        ;; form-errors (rf/subscribe [:zenform.subs/form-errors form-path])
+        ]
 
-    (rf/dispatch [:zenform.events/init-form form])
+    (rf/dispatch [:zf/init-form form form-path])
 
     (fn []
 
       [:div
 
-       [widget/form-errors form-path]
+       [:p "Form errors"]
+       [widget/node-errors form-path]
+
+       [:span "Name"]
+       [widget/text-input form-path [:name]]
+       [widget/node-errors form-path [:name]]
+
+       [:br]
+
+       [:span "Age"]
+       [widget/text-input form-path [:age]]
+       [widget/node-errors form-path [:age]]
+
+       [:br]
+
+       [:span "City*"]
+       [widget/text-input form-path [:city]]
+       [widget/node-errors form-path [:city]]
+
+       [:br]
+
+       [:span "Email"]
+       [widget/email-input form-path [:email]]
+       [widget/node-errors form-path [:email]]
+
+       [:br]
+
+       [:span "Password"]
+       [widget/password-input form-path [:password1]]
+       [widget/node-errors form-path [:password1]]
+
+       [:br]
+
+       [:span "Confirm password"]
+       [widget/password-input form-path [:password2]]
+       [widget/node-errors form-path [:password2]]
 
        [:hr]
 
-       [:p "REQUIRED: Input a number b/w 1 and 10"]
-       [widget/text-input form-path [:foo :bar :baz]]
-       [widget/field-errors form-path [:foo :bar :baz]]
-
-       [:p "NOT REQUIRED: Input a number b/w 1 and 10"]
-       [widget/text-input form-path [:foo :bar :test]]
-       [widget/field-errors form-path [:foo :bar :test]]
-
-       [:p "Enter email"]
-       [widget/email-input form-path [:foo :bar :email]]
-       [widget/field-errors form-path [:foo :bar :email]]
-
-       [:p "Enter email2"]
-       [widget/email-input form-path [:foo :bar :email2]]
-       [widget/field-errors form-path [:foo :bar :email2]]
-
-       [:p "Text Area"]
-       [widget/textarea-input form-path [:foo :bar :area]]
-       [widget/field-errors form-path [:foo :bar :area]]
-
-       [:p "Boolean"]
-       [widget/checkbox-input form-path [:foo :bar :bool]]
-       [widget/field-errors form-path [:foo :bar :bool]]
-
-       [:p "A"]
-       [widget/text-input form-path [:calc :a]]
-       [widget/field-errors form-path [:calc :a]]
-
-       [:p "B"]
-       [widget/text-input form-path [:calc :b]]
-       [widget/field-errors form-path [:calc :b]]
-
-       [:p "Sum"]
-       [sum-widget form-path [:calc :sum]]
-       [widget/field-errors form-path [:calc :sum]]
-
-       [:hr]
-
-       [cal-widget/grid form-path [:foo :date]]
-
-       [:p "Form state"]
-       [:p "values" @values]
+       ;; [:p "Form state"]
+       ;; [:p "values" @values]
 
        ])))
 
