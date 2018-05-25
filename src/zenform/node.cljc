@@ -185,6 +185,14 @@
       (apply update-in form field-path field-func args)
       form)))
 
+(defmulti add-field :type)
+
+(defmethod add-field :coll
+  [coll]
+  (if-let [field (-> coll :fields last)]
+    (update coll :fields conj field)
+    coll))
+
 ;;
 ;; Errors
 ;;

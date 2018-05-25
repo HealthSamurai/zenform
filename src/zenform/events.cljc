@@ -18,6 +18,11 @@
    (update-in db form-path node/trigger-value field-path value)))
 
 (rf/reg-event-db
+ :zf/add-field
+ (fn [db [_ form-path coll-path]]
+   (update-in db form-path node/update-form coll-path node/add-field)))
+
+(rf/reg-event-db
  :zf/set-value
  (fn [db [_ form-path value]]
    (update-in db form-path node/set-value value)))

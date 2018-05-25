@@ -72,6 +72,23 @@
    form-path field-path
    (assoc opt :delayed? true)))
 
+(defn coll-input
+  [form-path coll-path & [opt]]
+  (let [field @(rf/subscribe [:zf/field form-path coll-path])
+        {:keys [fields]} field
+        index-fields (map-indexed vector fields)]
+    [:div
+     (for [[index field] index-fields]
+       ^{:key index}
+       [:div
+        [text-input form-path (conj coll-path index)]
+        [:br]])
+     [:a {:href "#"
+          :on-click
+          (fn [e]
+            (rf/dispatch [:zf/add-field form-path coll-path]))}
+      "Add a field"]]))
+
 #_
 (defn checkbox-input
   [form-path field-path & [{:keys [attr]}]]

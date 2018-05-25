@@ -25,16 +25,30 @@
 (def val-email
   (val/email {:message "We cannot recognize your email"}))
 
+(def line-field
+  (node/text-field :line))
+
+(def form-address
+  (node/make-form
+   :address
+   [(node/text-field :state)
+    (node/text-field :city)
+    (node/make-coll
+     :lines [line-field line-field])]))
+
+(def coll-addresses
+  (node/make-coll
+   :addresses [form-address]))
+
 (def _form
   (node/make-form
    :user
    [(node/text-field :name)
+
     (node/integer-field
      :age {:required? true
            :message-required "Please input your age"
            :validators [val-age]})
-    (node/text-field
-     :city {:required? true})
 
     (node/email-field
      :email {:required? true
@@ -45,9 +59,21 @@
      :password1 {:required? true
                  :message-required "Password is required"
                  :validators [val-password]})
+
     (node/text-field
      :password2 {:required? true
-                 :message-required "Password confirmation is required"})]
+                 :message-required "Password confirmation is required"})
+
+    ;; (node/make-coll
+    ;;  :addresses [form-address])]
+
+    (node/make-coll
+     :words [(node/text-field :word)
+             (node/text-field :word)
+             (node/text-field :word)
+
+             ])]
+
    {:validators [val-passwords]}))
 
 #_
@@ -84,12 +110,6 @@
 
        [:br]
 
-       [:span "Age"]
-       [widget/text-input form-path [:age]]
-       [widget/node-errors form-path [:age]]
-
-       [:br]
-
        [:span "City*"]
        [widget/text-input form-path [:city]]
        [widget/node-errors form-path [:city]]
@@ -111,6 +131,16 @@
        [:span "Confirm password"]
        [widget/password-input form-path [:password2]]
        [widget/node-errors form-path [:password2]]
+
+       [:br]
+
+       [:span "Words"]
+       [widget/coll-input form-path [:words]]
+       [widget/node-errors form-path [:words]]
+
+       ;; [:span "Addresses"]
+       ;; [widget/coll-input form-path [:addresses]]
+       ;; [widget/node-errors form-path [:addresses]]
 
        [:hr]
 
