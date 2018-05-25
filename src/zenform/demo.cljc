@@ -108,12 +108,6 @@
 
        [:br]
 
-       [:span "City*"]
-       [widget/text-input form-path [:city]]
-       [widget/node-errors form-path [:city]]
-
-       [:br]
-
        [:span "Email"]
        [widget/email-input form-path [:email]]
        [widget/node-errors form-path [:email]]
