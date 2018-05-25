@@ -53,9 +53,9 @@
 
 (defn node-children
   [node]
-  (condp = (:type node)
-    :form (-> node :fields vals)
-    :coll (-> node :fields)))
+  (cond
+    (-> node :type (= :form)) (-> node :fields vals)
+    (-> node :type (= :coll)) (-> node :fields) ))
 
 (defn iter-node [node]
   (tree-seq node? node-children node))
@@ -227,6 +227,22 @@
     (int? value) value
     (string? value)
     (-> value s/trim parseInt)))
+
+(defmethod parse :boolean
+  [{:keys [value] :as field}]
+  (cond
+    (boolean? value) value
+
+    (string? value)
+    (let [value (-> value s/trim s/lower-case)]
+      (cond
+        (contains? #{"true" "yes" "on" "1"} value) true
+        (contains? #{"false" "no" "off" "0"} value) false))
+
+    (int? value)
+    (cond
+      (= value 0) false
+      (= value 1) true)))
 
 (defn empty-value?
   [x]

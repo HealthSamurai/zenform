@@ -142,12 +142,6 @@
      :addresses
      [form-address-req])]))
 
-#_
-(def values-val
-  {:age 17
-   :addresses
-   [{:city "New York" :lines ["street 1" "street 2 and more"]}]})
-
 (deftest test-required
 
   (testing "Validate blank form"
@@ -223,3 +217,60 @@
                  :fields [nil nil]}}}]}}}]
 
       (is (= errors expected)))))
+
+(def form-agreements-coer
+  (node/make-form
+   :agreement
+   [(node/boolean-field :agree)
+    (node/make-coll
+     :values
+     [(node/integer-field nil)
+      (node/integer-field nil)])]))
+
+(def form-test-coer
+  (node/make-form
+   :test
+   [(node/integer-field :age)
+    (node/make-coll
+     :agreements
+     [form-agreements-coer
+      form-agreements-coer])]))
+
+(def values-coer
+  {:age "  19  "
+   :agreements
+   [{:agree "  True  " :values [" \t\t 99" "39\n\n"]}
+    {:agree "FALSE  " :values [" \t\t 34" "f9999"]}]})
+
+(deftest test-coercion
+
+  (testing "Input a form with text values"
+    (let [form (-> form-test-coer
+                   (node/set-value values-coer)
+                   (node/validate-all))
+          errors (node/get-errors form)
+          values (node/get-value form)]
+
+      (is (= values
+             {:age 19
+              :agreements
+              [{:agree true :values [99 39]}
+               {:agree false :values [34 "f9999"]}]}))
+
+      (is (= errors
+             {:errors nil
+              :fields
+              {:age nil
+               :agreements
+               {:errors nil
+                :fields
+                [{:errors nil
+                  :fields
+                  {:agree nil
+                   :values {:errors nil :fields [nil nil]}}}
+                 {:errors nil
+                  :fields
+                  {:agree nil
+                   :values
+                   {:errors nil
+                    :fields [nil ["Wrong field value"]]}}}]}}})))))
