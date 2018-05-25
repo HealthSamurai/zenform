@@ -367,11 +367,11 @@
       (trigger-input value)
       (validate-node)))
 
-(defn form-trigger-input
+(defn trigger-input-path
   [form path value]
   (update-form form path trigger-input value))
 
-(defn form-trigger-value
+(defn trigger-value-path
   [form path value]
   (update-form form path trigger-value value))
 
@@ -389,7 +389,7 @@
             path (butlast path)]
         (recur result path)))))
 
-(defn form-trigger-bubbling
+(defn trigger-bubbling
   [form path value]
   (let [paths (upward-paths path)]
     (loop [form form
@@ -397,5 +397,5 @@
       (if (empty? paths)
         (trigger-value form value) ;; trigger the top-level node
         (let [[path paths] (head-tail paths)
-              form (form-trigger-value form path value)]
+              form (trigger-value-path form path value)]
           (recur form paths))))))
