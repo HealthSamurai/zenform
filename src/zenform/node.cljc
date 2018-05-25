@@ -360,42 +360,38 @@
   node)
 
 ;;
-;; Triggers
+;; Trigger input
 ;;
 
-(defmulti trigger-input :type)
+(defmulti trigger-field-input :type)
 
-(defmethod trigger-input :default
+(defmethod trigger-field-input :default
   [node] node)
 
-(defmethod trigger-input :field
+(defmethod trigger-field-input :field
   [field value]
   (-> field
       (clear-errors)
       (set-value value)))
 
-(defmulti trigger-value :type)
+(defn trigger-input
+  [form path value]
+  (update-form form path trigger-field-input value))
 
-(defmethod trigger-value :default
+;;
+;; Trigger bubbling
+;;
+
+(defmulti trigger-field-value :type)
+
+(defmethod trigger-field-value :default
   [node] node)
 
-(defmethod trigger-value :field ;; TODO what type?
+(defmethod trigger-field-value :field
   [field value]
   (-> field
-      (trigger-input value)
+      (trigger-field-input value)
       (validate-node)))
-
-(defn trigger-input-path
-  [form path value]
-  (update-form form path trigger-input value))
-
-(defn trigger-value-path
-  [form path value]
-  (update-form form path trigger-value value))
-
-;;
-;; Bubbling
-;;
 
 (defn upward-paths
   [path]
@@ -407,9 +403,9 @@
             path (butlast path)]
         (recur path result)))))
 
-(defn trigger-bubbling
+(defn trigger-value
   [form path value]
-  (let [form (trigger-value-path form path value)
+  (let [form (update-form form path trigger-field-value value)
         paths (upward-paths path)]
     (loop [form form
            paths paths]

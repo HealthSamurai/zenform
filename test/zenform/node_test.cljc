@@ -298,7 +298,7 @@
   (testing "Trigger bubbling on a field"
     (let [form (-> form-bubble
                    (node/set-value values-bubble)
-                   (node/trigger-bubbling [:email2] "test@test.com2"))
+                   (node/trigger-value [:email2] "test@test.com2"))
 
           errors (node/get-errors form)
           values (node/get-value form)]
@@ -310,7 +310,7 @@
               :email2 "test@test.com2"}))
 
 
-      (testing "There is no an error on the `age` field since bubbling does not touch it"
+      (testing "There is no an error on the `age` field"
         (is (= errors
                {:errors ["Emails are not equal"]
                 :fields {:age nil
