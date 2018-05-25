@@ -167,6 +167,25 @@
   (assoc field :value value))
 
 ;;
+;; Paths and fields
+;;
+
+(defn get-field-path [path]
+  (interleave (repeat :fields) path))
+
+(defn get-field
+  [node path]
+  (get-in node (get-field-path path)))
+
+(defn update-form
+  [form path field-func & args]
+  (let [field-path (get-field-path path)
+        field (get-in form field-path)]
+    (if field
+      (apply update-in form field-path field-func args)
+      form)))
+
+;;
 ;; Errors
 ;;
 
@@ -185,6 +204,11 @@
 (defn get-node-errors
   [{:keys [errors]}]
   errors)
+
+(defn get-path-errors
+  [form path]
+  (when-let [node (get-field form path)]
+    (get-node-errors node)))
 
 (defn node-ok?
   [node]
@@ -340,25 +364,6 @@
 (defn validate-all
   [node]
   (walk/postwalk walker-validate node))
-
-;;
-;; Paths and fields
-;;
-
-(defn get-field-path [path]
-  (interleave (repeat :fields) path))
-
-(defn get-field
-  [node path]
-  (get-in node (get-field-path path)))
-
-(defn update-form
-  [form path field-func & args]
-  (let [field-path (get-field-path path)
-        field (get-in form field-path)]
-    (if field
-      (apply update-in form field-path field-func args)
-      form)))
 
 ;;
 ;; Events

@@ -1,28 +1,28 @@
 (ns zenform.events
   (:require [re-frame.core :as rf]
-            [zenform.form :as form]))
+            [zenform.node :as node]))
 
 (rf/reg-event-db
- ::init-form
- (fn [db [_ form]]
-   (assoc-in db (:path form) form)))
+ :zf/init-form
+ (fn [db [_ form form-path]]
+   (assoc-in db form-path form)))
 
 (rf/reg-event-db
- ::trigger
+ :zf/on-input
  (fn [db [_ form-path field-path value]]
-   (update-in db form-path form/trigger field-path value)))
+   (update db form-path node/trigger-input value)))
 
 (rf/reg-event-db
- ::clear-field-errors
- (fn [db [_ form-path field-path]]
-   (update-in db form-path form/clear-field-errors field-path)))
+ :zf/on-change
+ (fn [db [_ form-path field-path value]]
+   (update db form-path node/trigger-value value)))
 
 (rf/reg-event-db
- ::set-values
- (fn [db [_ form-path values]]
-   (update-in db form-path form/set-values values)))
+ :zf/set-value
+ (fn [db [_ form-path value]]
+   (update-in db form-path node/set-value value)))
 
 (rf/reg-event-db
- ::validate-form
+ :zf/validate
  (fn [db [_ form-path]]
-   (update-in db form-path form/validate)))
+   (update-in db form-path node/validate-all)))
