@@ -43,10 +43,12 @@
 ;; Helpers
 ;;
 
-(defn head-tail [coll]
+(defn head-tail
+  [coll]
   [(first coll) (rest coll)])
 
-(defn node? [node]
+(defn node?
+  [node]
   (and
    (map? node)
    (get #{:form :coll :field} (:type node))))
@@ -57,7 +59,8 @@
     (-> node :type (= :form)) (-> node :fields vals)
     (-> node :type (= :coll)) (-> node :fields) ))
 
-(defn iter-node [node]
+(defn iter-node
+  [node]
   (tree-seq node? node-children node))
 
 ;;
@@ -178,6 +181,14 @@
 (defn clear-errors
   [node]
   (set-errors node nil))
+
+(defn get-node-errors
+  [{:keys [errors]}]
+  errors)
+
+(defn node-ok?
+  [node]
+  (not (some get-node-errors (iter-node node))))
 
 (defmulti get-errors :type)
 

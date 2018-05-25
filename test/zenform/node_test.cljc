@@ -112,7 +112,9 @@
            :fields
            [{:errors nil
              :fields
-             {:city nil :lines {:errors nil :fields [nil ["Too long line"]]}}}]}}}]
+             {:city nil
+              :lines {:errors nil
+                      :fields [nil ["Too long line"]]}}}]}}}]
     (is (= errors expected))))
 
 
@@ -141,6 +143,36 @@
     (node/make-coll
      :addresses
      [form-address-req])]))
+
+(deftest test-form-ok
+
+  (testing "Check if the whole form is OK"
+    (let [values {:age 19
+                  :addresses [{:city "NY" :lines ["aaa" "bbb"]}]}
+
+          form (-> form-user-req
+                   (node/set-value values)
+                   (node/validate-all))]
+
+      (is (node/node-ok? form)))
+
+    (let [values {:age -1
+                  :addresses [{:city "NY" :lines ["aaa" "bbb"]}]}
+
+          form (-> form-user-req
+                   (node/set-value values)
+                   (node/validate-all))]
+
+      (is (not (node/node-ok? form))))
+
+    (let [values {:age 88
+                  :addresses [{:city "NY" :lines ["aaa" "bb"]}]}
+
+          form (-> form-user-req
+                   (node/set-value values)
+                   (node/validate-all))]
+
+      (is (not (node/node-ok? form))))))
 
 (deftest test-required
 
