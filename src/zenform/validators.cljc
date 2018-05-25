@@ -11,13 +11,17 @@
   (fn [validator value]
     (:type validator)))
 
+;;
+;; Fields
+;;
+
 (defmethod validate :min-value
-  [{:keys [min-val]} value]
-  (>= value min-val))
+  [{:keys [min-value]} value]
+  (>= value min-value))
 
 (defmethod validate :max-value
-  [{:keys [max-val]} value]
-  (<= value max-val))
+  [{:keys [max-value]} value]
+  (<= value max-value))
 
 (defmethod validate :min-count
   [{:keys [min-count]} value]
@@ -28,33 +32,41 @@
   (<= (count value) max-count))
 
 (defmethod validate :range
-  [{:keys [min-val max-val]} value]
-  (and (>= value min-val)
-       (<= value max-val)))
+  [{:keys [min-value max-value]} value]
+  (and (>= value min-value)
+       (<= value max-value)))
 
 (defmethod validate :regex
   [{:keys [regex]} value]
   (re-matches regex value))
 
-#_
+;;
+;; Forms
+;;
+
+;; TODO: duplicate of zenform.node/get-field-path
+;; had to copy it to prevent circular deps
+(defn get-field-path [path]
+  (interleave (repeat :fields) path))
+
 (defmethod validate :fields-equal
-  [{:keys [field-path1 field-path2]} form-values]
-  (= (get-in form-values field-path1)
-     (get-in form-values field-path2)))
+  [{:keys [path1 path2]} form-values]
+  (= (get-in form-values (get-field-path path1))
+     (get-in form-values (get-field-path path2))))
 
 ;;
-;; Validators
+;; Constructors
 ;;
 
-(defn min-value [min-val & [opt]]
+(defn min-value [min-value & [opt]]
   (merge validator-defaults opt
          {:type :min-value
-          :min-val min-val}))
+          :min-value min-value}))
 
-(defn max-value [max-val & [opt]]
+(defn max-value [max-value & [opt]]
   (merge validator-defaults opt
          {:type :max-value
-          :max-val max-val}))
+          :max-value max-value}))
 
 (defn min-count [min-count & [opt]]
   (merge validator-defaults opt
@@ -66,27 +78,22 @@
          {:type :max-count
           :max-count max-count}))
 
-(defn range [min-val max-val & [opt]]
+(defn range [min-value max-value & [opt]]
   (merge validator-defaults opt
          {:type :range
-          :min-val min-val
-          :max-val max-val}))
+          :min-value min-value
+          :max-value max-value}))
 
 (defn regex [re & [opt]]
   (merge validator-defaults opt
          {:type :regex
           :regex re}))
 
-;;
-;; Form validators
-;;
-
-#_
-(defn fields-equal [field-path1 field-path2 & [opt]]
+(defn fields-equal [path1 path2 & [opt]]
   (merge validator-defaults opt
          {:type :fields-equal
-          :field-path1 field-path1
-          :field-path2 field-path2}))
+          :path1 path1
+          :path2 path2}))
 
 ;;
 ;; Helpers
