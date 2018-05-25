@@ -44,15 +44,10 @@
 ;; Forms
 ;;
 
-;; TODO: duplicate of zenform.node/get-field-path
-;; had to copy it to prevent circular deps
-(defn get-field-path [path]
-  (interleave (repeat :fields) path))
-
 (defmethod validate :fields-equal
   [{:keys [path1 path2]} form-values]
-  (= (get-in form-values (get-field-path path1))
-     (get-in form-values (get-field-path path2))))
+  (= (get-in form-values path1)
+     (get-in form-values path2)))
 
 ;;
 ;; Constructors
@@ -88,6 +83,11 @@
   (merge validator-defaults opt
          {:type :regex
           :regex re}))
+
+(def email-regex #".+?\@.+?\..+")
+
+(defn email [& [opt]]
+  (regex email-regex opt))
 
 (defn fields-equal [path1 path2 & [opt]]
   (merge validator-defaults opt

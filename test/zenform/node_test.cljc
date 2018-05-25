@@ -274,3 +274,45 @@
                    :values
                    {:errors nil
                     :fields [nil ["Wrong field value"]]}}}]}}})))))
+
+
+(def form-bubble
+  (node/make-form
+   :bubble
+   [(node/integer-field
+     :age {:validators [(val/min-value 18)]})
+    (node/email-field
+     :email1 {:validators [(val/email {:message "Wrong email1"})]})
+    (node/email-field
+     :email2 {:validators [(val/email {:message "Wrong email2"})]})]
+   {:validators [(val/fields-equal
+                  [:email1] [:email2]
+                  {:message "Emails are not equal"})]}))
+
+(def values-bubble
+  {:age " lalilulelo  "
+   :email1 "test@test.com"})
+
+(deftest test-bubbling
+
+  (testing "Trigger bubbling on a field"
+    (let [form (-> form-bubble
+                   (node/set-value values-bubble)
+                   (node/trigger-bubbling [:email2] "test@test.com2"))
+
+          errors (node/get-errors form)
+          values (node/get-value form)]
+
+
+      (is (= values
+             {:age " lalilulelo  "
+              :email1 "test@test.com"
+              :email2 "test@test.com2"}))
+
+
+      (testing "There is no an error on the `age` field since bubbling does not touch it"
+        (is (= errors
+               {:errors ["Emails are not equal"]
+                :fields {:age nil
+                         :email1 nil
+                         :email2 nil}}))))))

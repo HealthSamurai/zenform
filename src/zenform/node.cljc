@@ -104,6 +104,8 @@
 
 (def text-field (partial make-field :text))
 
+(def email-field (partial make-field :email))
+
 (def integer-field (partial make-field :integer))
 
 (def boolean-field (partial make-field :boolean))
@@ -198,9 +200,19 @@
 ;; Coercion
 ;;
 
-(defmulti parse :field-type)
 
 (defmulti unparse :field-type)
+
+(defn unparse-safe [field]
+  (with-catch (unparse field)))
+
+(defmethod unparse :default
+  [{:keys [value]}]
+  (cond
+    (string? value) value
+    :else (str value)))
+
+(defmulti parse :field-type)
 
 (defn parse-safe [field]
   (with-catch (parse field)))
@@ -211,12 +223,18 @@
     (string? value) value
     :else (str value)))
 
+(defmethod parse :email
+  [{:keys [value]}]
+  (cond
+    (string? value)
+    (-> value s/trim s/lower-case)))
+
 #?(:clj
-   (defn parseInt [x]
+   (defn parse-int [x]
      (Integer/parseInt x)))
 
 #?(:cljs
-   (defn parseInt [x]
+   (defn parse-int [x]
      (let [val (js/parseInt x)]
        (when-not (js/isNaN val)
          val))))
@@ -226,7 +244,7 @@
   (cond
     (int? value) value
     (string? value)
-    (-> value s/trim parseInt)))
+    (-> value s/trim parse-int)))
 
 (defmethod parse :boolean
   [{:keys [value] :as field}]
@@ -381,21 +399,22 @@
 
 (defn upward-paths
   [path]
-  (loop [result []
-         path path]
+  (loop [path (butlast path)
+         result []]
     (if (empty? path)
       result
       (let [result (conj result path)
             path (butlast path)]
-        (recur result path)))))
+        (recur path result)))))
 
 (defn trigger-bubbling
   [form path value]
-  (let [paths (upward-paths path)]
+  (let [form (trigger-value-path form path value)
+        paths (upward-paths path)]
     (loop [form form
            paths paths]
       (if (empty? paths)
-        (trigger-value form value) ;; trigger the top-level node
+        (validate-node form) ;; validate the top-level node too
         (let [[path paths] (head-tail paths)
-              form (trigger-value-path form path value)]
+              form (update-form path validate-node)]
           (recur form paths))))))
