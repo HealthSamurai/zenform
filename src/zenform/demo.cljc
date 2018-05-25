@@ -70,9 +70,7 @@
     (node/make-coll
      :words [(node/text-field :word)
              (node/text-field :word)
-             (node/text-field :word)
-
-             ])]
+             (node/text-field :word)])]
 
    {:validators [val-passwords]}))
 
@@ -135,7 +133,7 @@
        [:br]
 
        [:span "Words"]
-       [widget/coll-input form-path [:words]]
+       [widget/coll-input form-path [:words] widget/text-input]
        [widget/node-errors form-path [:words]]
 
        ;; [:span "Addresses"]

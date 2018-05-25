@@ -262,7 +262,6 @@
 
 (defmethod parse :text
   [{:keys [value]}]
-  (println "PARSE" value (type value)) ;; todo
   (cond
     (string? value) value
     :else (str value)))
@@ -370,7 +369,6 @@
         (recur node vals)))))
 
 (defn validate-node [node]
-  (println "VALIDATE-NODE" (:type node)) ;; todo
   (-> node
       clear-errors
       coerce-field
@@ -442,7 +440,6 @@
 
 (defn trigger-value
   [form path value]
-  (println "TRIGGER-VALUE" path value) ;; todo
   (let [form (update-form form path trigger-field-value value)
         paths (upward-paths path)]
     (loop [form form

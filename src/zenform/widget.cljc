@@ -73,15 +73,16 @@
    (assoc opt :delayed? true)))
 
 (defn coll-input
-  [form-path coll-path & [opt]]
+  [form-path coll-path field-widget & [opt]]
   (let [field @(rf/subscribe [:zf/field form-path coll-path])
         {:keys [fields]} field
         index-fields (map-indexed vector fields)]
     [:div
-     (for [[index field] index-fields]
+     (for [[index field] index-fields
+           :let [child-path (conj coll-path index)]]
        ^{:key index}
        [:div
-        [text-input form-path (conj coll-path index)]
+        [field-widget form-path child-path]
         [:br]])
      [:a {:href "#"
           :on-click
