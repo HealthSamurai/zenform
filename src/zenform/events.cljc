@@ -20,7 +20,12 @@
 (rf/reg-event-db
  :zf/add-field
  (fn [db [_ form-path coll-path]]
-   (update-in db form-path node/update-form coll-path node/add-field)))
+   (update-in db form-path node/form-add-field coll-path)))
+
+(rf/reg-event-db
+ :zf/del-field
+ (fn [db [_ form-path coll-path index]]
+   (update-in db form-path node/form-del-field coll-path index)))
 
 (rf/reg-event-db
  :zf/set-value

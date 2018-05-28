@@ -34,6 +34,7 @@
    node-defaults
    {:type :field
     :field-type nil
+    :input nil
     :value nil
     :required? false
     :message-required "This value is required"
@@ -193,6 +194,31 @@
     (update coll :fields conj field)
     coll))
 
+(defmulti del-field :type)
+
+(defn vec-remove
+  [coll i]
+  (let [limit (count coll)]
+    (if (and (>= i 0) (< i limit))
+      (let [left (subvec coll 0 i)
+            right (subvec coll (inc i) (count coll))]
+        (into left right))
+      coll)))
+
+(defmethod del-field :coll
+  [coll index]
+  (if-let [field (-> coll :fields last)]
+    (update coll :fields vec-remove index)
+    coll))
+
+(defn form-add-field
+  [form coll-path]
+  (update-form form coll-path add-field))
+
+(defn form-del-field
+  [form coll-path index]
+  (update-form form coll-path del-field index))
+
 ;;
 ;; Errors
 ;;
@@ -243,6 +269,9 @@
 ;; Coercion
 ;;
 
+(defn to-parse
+  [{:keys [input value]}]
+  (or input value))
 
 (defmulti unparse :field-type)
 
@@ -261,16 +290,18 @@
   (with-catch (parse field)))
 
 (defmethod parse :text
-  [{:keys [value]}]
-  (cond
-    (string? value) value
-    :else (str value)))
+  [field]
+  (let [value (to-parse field)]
+    (cond
+      (string? value) value
+      :else (str value))))
 
 (defmethod parse :email
-  [{:keys [value]}]
-  (cond
-    (string? value)
-    (-> value s/trim s/lower-case)))
+  [field]
+  (let [value (to-parse field)]
+    (cond
+      (string? value)
+      (-> value s/trim s/lower-case))))
 
 #?(:clj
    (defn parse-int [x]
@@ -283,27 +314,29 @@
          val))))
 
 (defmethod parse :integer
-  [{:keys [value] :as field}]
-  (cond
-    (int? value) value
-    (string? value)
-    (-> value s/trim parse-int)))
+  [field]
+  (let [value (to-parse field)]
+    (cond
+      (int? value) value
+      (string? value)
+      (-> value s/trim parse-int))))
 
 (defmethod parse :boolean
-  [{:keys [value] :as field}]
-  (cond
-    (boolean? value) value
-
-    (string? value)
-    (let [value (-> value s/trim s/lower-case)]
-      (cond
-        (contains? #{"true" "yes" "on" "1"} value) true
-        (contains? #{"false" "no" "off" "0"} value) false))
-
-    (int? value)
+  [field]
+  (let [value (to-parse field)]
     (cond
-      (= value 0) false
-      (= value 1) true)))
+      (boolean? value) value
+
+      (string? value)
+      (let [value (-> value s/trim s/lower-case)]
+        (cond
+          (contains? #{"true" "yes" "on" "1"} value) true
+          (contains? #{"false" "no" "off" "0"} value) false))
+
+      (int? value)
+      (cond
+        (= value 0) false
+        (= value 1) true))))
 
 (defn empty-value?
   [x]
@@ -318,7 +351,7 @@
   [node] node)
 
 (defmethod coerce-field :field
-  [{:keys [value message-parse] :as field}]
+  [{:keys [message-parse] :as field}]
   (let [value (parse-safe field)]
     (cond
 
@@ -395,6 +428,28 @@
   node)
 
 ;;
+;; Input
+;;
+
+(defn set-input
+  [field input]
+  (assoc field :input input))
+
+(defn clear-input
+  [field]
+  (set-input field nil))
+
+(defn get-input
+  [{:keys [input]}]
+  input)
+
+(defn get-widget-value
+  [{:keys [input] :as field}]
+  (or (get-input field)
+      (unparse-safe field)
+      ""))
+
+;;
 ;; Trigger input
 ;;
 
@@ -404,14 +459,14 @@
   [node] node)
 
 (defmethod trigger-field-input :field
-  [field value]
+  [field input]
   (-> field
       (clear-errors)
-      (set-value value)))
+      (set-input input)))
 
 (defn trigger-input
-  [form path value]
-  (update-form form path trigger-field-input value))
+  [form path input]
+  (update-form form path trigger-field-input input))
 
 ;;
 ;; Trigger bubbling

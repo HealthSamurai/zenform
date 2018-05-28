@@ -74,23 +74,10 @@
 
    {:validators [val-passwords]}))
 
-#_
-(defn sum-widget
-  [form-path field-path]
-  (let [field @(rf/subscribe [:zenform.subs/field form-path field-path])
-        values @(rf/subscribe [:zenform.subs/values form-path])
-        {:keys [value]} field
-        sum (when-let [a (-> values :calc :a)]
-              (when-let [b (-> values :calc :b)]
-                (+ a b)))]
-    (rf/dispatch [:zf/trigger form-path field-path sum])
-    [:input {:value (or value "")
-             :readOnly true}]))
-
 (defn form-view []
   (let [form _form
-        ;; values (rf/subscribe [:zenform.subs/values form-path])
-        ;; form-errors (rf/subscribe [:zenform.subs/form-errors form-path])
+        ;; values (rf/subscribe [:zf/values form-path])
+        ;; form-errors (rf/subscribe [:zf/form-errors form-path])
         ]
 
     (rf/dispatch [:zf/init-form form form-path])
@@ -105,6 +92,12 @@
        [:span "Name"]
        [widget/text-input form-path [:name]]
        [widget/node-errors form-path [:name]]
+
+       [:br]
+
+       [:span "Age"]
+       [widget/text-input form-path [:age]]
+       [widget/node-errors form-path [:age]]
 
        [:br]
 

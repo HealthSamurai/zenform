@@ -1,5 +1,6 @@
 (ns zenform.widget
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [zenform.node :as node]))
 
 ;;
 ;; On-change shortcuts
@@ -50,11 +51,10 @@
 (defn text-input
   [form-path field-path & [{:keys [attr delayed?] :as opt}]]
   (let [field @(rf/subscribe [:zf/field form-path field-path])
-        {:keys [value]} field
         on-change (partial on-change form-path field-path)
         on-input (partial on-input form-path field-path)]
     [:input (merge attr
-                   {:value (or value "")}
+                   {:value (node/get-widget-value field)}
                    (if delayed?
                      {:on-change on-input
                       :on-blur on-change}
@@ -83,6 +83,11 @@
        ^{:key index}
        [:div
         [field-widget form-path child-path]
+        [:a {:href "#"
+             :on-click
+             (fn [e]
+               (rf/dispatch [:zf/del-field form-path coll-path index]))}
+         "Remove"]
         [:br]])
      [:a {:href "#"
           :on-click
