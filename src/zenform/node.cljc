@@ -49,18 +49,29 @@
   [(first coll) (rest coll)])
 
 (defn node?
+  "Checks wether it's a form's node."
   [node]
   (and
    (map? node)
    (get #{:form :coll :field} (:type node))))
 
-(defn node-children
-  [node]
-  (cond
-    (-> node :type (= :form)) (-> node :fields vals)
-    (-> node :type (= :coll)) (-> node :fields) ))
+(defmulti node-children
+  "For a given node, returns its child nodes. "
+  :type)
+
+(defmethod node-children :default
+  [node])
+
+(defmethod node-children :form
+  [form]
+  (-> form :fields vals))
+
+(defmethod node-children :coll
+  [coll]
+  (-> coll :fields))
 
 (defn iter-node
+  "Returns a flat list of all the nodes from the top to the bottom."
   [node]
   (tree-seq node? node-children node))
 
@@ -68,7 +79,9 @@
 ;; Setting fields
 ;;
 
-(defmulti set-fields :type)
+(defmulti set-fields
+  "Assigns a set of fields to a form or a collection."
+  :type)
 
 (defmethod set-fields :form
   [form fields]
@@ -84,19 +97,19 @@
 ;; Constructors
 ;;
 
-(defn make-coll
-  [id fields & [opt]]
-  (-> coll-defaults
-      (merge opt)
-      (assoc :type :coll)
-      (assoc :id id)
-      (set-fields fields)))
-
 (defn make-form
   [id fields & [opt]]
   (-> form-defaults
       (merge opt)
       (assoc :type :form)
+      (assoc :id id)
+      (set-fields fields)))
+
+(defn make-coll
+  [id fields & [opt]]
+  (-> coll-defaults
+      (merge opt)
+      (assoc :type :coll)
       (assoc :id id)
       (set-fields fields)))
 
@@ -118,7 +131,11 @@
 ;; Values
 ;;
 
-(defmulti get-value :type)
+(defmulti get-value
+  "For a give node, recursively returns its value.
+  For a form, returns a map of values. For a collection,
+  returns a vector of values."
+  :type)
 
 (defmethod get-value :form
   [{:keys [fields]}]
@@ -137,7 +154,11 @@
   [node]
   (assoc node :value nil))
 
-(defmulti set-value :type)
+(defmulti set-value
+  "For a given node, recursively sets values. For a form,
+  takes a map of values. For a collection, takes a vector
+  of values. For a field, takes a scalar value (string, int, etc)."
+  :type)
 
 (defmethod set-value :form
   [{:keys [fields] :as form} values]
@@ -171,14 +192,23 @@
 ;; Paths and fields
 ;;
 
-(defn get-field-path [path]
+(defn get-field-path
+  "Returns form's internal path to a field.
+  (get-field-path [:foo :bar])
+  (:fields :foo :fields :bar)"
+
+  [path]
   (interleave (repeat :fields) path))
 
 (defn get-field
+  "For a form or a node, returns a child node by it's path."
   [node path]
   (get-in node (get-field-path path)))
 
 (defn update-form
+  "High-level function to update a child node in a form by it's path
+  and some function that takes a node and returns an updated node.
+  The rest args for that function are also supported."
   [form path field-func & args]
   (let [field-path (get-field-path path)
         field (get-in form field-path)]
@@ -186,7 +216,9 @@
       (apply update-in form field-path field-func args)
       form)))
 
-(defmulti add-field :type)
+(defmulti add-field
+  "Adds a new field to a collection (when a user presses a plus button)."
+  :type)
 
 (defmethod add-field :coll
   [coll]
@@ -194,9 +226,8 @@
     (update coll :fields conj field)
     coll))
 
-(defmulti del-field :type)
-
 (defn vec-remove
+  "Custom wrapper that removes an item from a vector by its index. Returns a new vector."
   [coll i]
   (let [limit (count coll)]
     (if (and (>= i 0) (< i limit))
@@ -204,6 +235,10 @@
             right (subvec coll (inc i) (count coll))]
         (into left right))
       coll)))
+
+(defmulti del-field
+  "Removes a field from a collection (when a user presses a minus button)."
+  :type)
 
 (defmethod del-field :coll
   [coll index]
@@ -245,6 +280,8 @@
     (get-node-errors node)))
 
 (defn node-ok?
+  "Recursively checks if a node valid or not. For the positive result,
+  all the child nodes should also be valid."
   [node]
   (not (some get-node-errors (iter-node node))))
 
@@ -312,6 +349,23 @@
      (let [val (js/parseInt x)]
        (when-not (js/isNaN val)
          val))))
+
+#?(:clj
+   (when-not (resolve 'clojure.core/int?)
+     (defn int?
+       "Return true if x is a fixed precision integer"
+       {:added "1.9"}
+       [x] (or (instance? Long x)
+               (instance? Integer x)
+               (instance? Short x)
+               (instance? Byte x)))))
+
+#?(:clj
+   (when-not (resolve 'clojure.core/boolean?)
+     (defn boolean?
+       "Return true if x is a Boolean"
+       {:added "1.9"}
+       [x] (instance? Boolean x))))
 
 (defmethod parse :integer
   [field]
