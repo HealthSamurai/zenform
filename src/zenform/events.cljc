@@ -32,7 +32,12 @@
  (fn [db [_ form-path value]]
    (update-in db form-path node/set-value value)))
 
-(rf/reg-event-db
- :zf/validate
- (fn [db [_ form-path]]
-   (update-in db form-path node/validate-all)))
+(rf/reg-event-fx
+ :zf/submit
+ (fn [{db :db} [_ form-path event-ok event-err]]
+   (let [form (get-in db form-path)
+         form (node/validate-all form)
+         ok? (node/node-ok? form)
+         event (if ok? event-ok event-err)]
+     {:db (assoc-in db form-path form)
+      :dispatch [event form-path]})))
