@@ -48,17 +48,40 @@
 ;; Inputs
 ;;
 
+(defn add-class
+  "Appends a new class to existing ones."
+  [classes class]
+  (cond
+    (nil? class)
+    classes
+
+    (string? classes)
+    (str classes " " class)
+
+    (keyword? classes)
+    (str (name classes) " " class)
+
+    (nil? classes)
+    class
+
+    :else classes))
+
 (defn text-input
   [form-path field-path & [{:keys [attr delayed?] :as opt}]]
   (let [field @(rf/subscribe [:zf/field form-path field-path])
+        value (node/get-widget-value field)
+        ok? (node/node-ok? field)
+        error-class (when-not ok? "invalid")
         on-change (partial on-change form-path field-path)
         on-input (partial on-input form-path field-path)]
-    [:input (merge attr
-                   {:value (node/get-widget-value field)}
-                   (if delayed?
-                     {:on-change on-input
-                      :on-blur on-change}
-                     {:on-change on-change}))]))
+    [:input
+     (-> attr
+         (assoc :value value)
+         (update :class add-class error-class)
+         (merge (if delayed?
+                  {:on-change on-input
+                   :on-blur on-change}
+                  {:on-change on-change})))]))
 
 (defn password-input
   [form-path field-path & [opt]]
