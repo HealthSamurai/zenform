@@ -1,6 +1,38 @@
 (ns zenform.widget
-  (:require [re-frame.core :as rf]
+  (:require [reagent.core :as r]
+            [re-frame.core :as rf]
             [zenform.node :as node]))
+
+;;
+;; Helpers
+;;
+
+(defn add-class
+  "Appends a new class to existing ones."
+  [classes class]
+  (cond
+    (nil? class)
+    classes
+
+    (string? classes)
+    (str classes " " class)
+
+    (keyword? classes)
+    (str (name classes) " " class)
+
+    (nil? classes)
+    class
+
+    :else classes))
+
+(defn entity [code]
+  {:dangerouslySetInnerHTML {:__html code}})
+
+(defn item-index
+  "Turns a seq of items into a map where a value is a key
+   and its name (description) is a value."
+  [items]
+  (into {} (map (juxt :value :name) items)))
 
 ;;
 ;; On-change shortcuts
@@ -45,31 +77,13 @@
   [error-list @(rf/subscribe [:zf/node-errors form-path node-path]) opt])
 
 ;;
-;; Inputs
+;; Text inputs
 ;;
-
-(defn add-class
-  "Appends a new class to existing ones."
-  [classes class]
-  (cond
-    (nil? class)
-    classes
-
-    (string? classes)
-    (str classes " " class)
-
-    (keyword? classes)
-    (str (name classes) " " class)
-
-    (nil? classes)
-    class
-
-    :else classes))
 
 (defn text-input
   [form-path field-path & [{:keys [attr delayed?] :as opt}]]
   (let [field @(rf/subscribe [:zf/field form-path field-path])
-        value (node/get-widget-value field)
+        value (node/unparse-safe field)
         ok? (node/node-ok? field)
         error-class (when-not ok? "invalid")
         on-change (partial on-change form-path field-path)
@@ -94,6 +108,54 @@
   (text-input
    form-path field-path
    (assoc opt :delayed? true)))
+
+;;
+;; Select and dropdown
+;;
+
+(defn select-input
+  [form-path field-path items & [opt]]
+  (let [field (rf/subscribe [:zf/field form-path field-path])
+        index (item-index items)
+        ;; a state that tracks wether a dropdown is shown or not
+        state (r/atom nil)]
+    (letfn [;; local helpers that closure upon the state
+            (toggle [] (swap! state update :open? not))
+            (open? [] (:open? @state))]
+      (fn [form-path field-path items & [opt]]
+        (let [{:keys [value]} @field
+              {:keys [placeholder]} opt
+              value (or (get index value)
+                        placeholder
+                        "Select...")]
+          [:div.re-select-container
+           [:div.re-re-select
+            {:tabIndex 0
+             :on-click toggle}
+            [:div.flex
+             [:span.triangle "▾"]
+             [:span.choose-value value]
+             [:span.clear
+              {:dangerouslySetInnerHTML {:__html "&times;"}
+               :on-click
+               (fn [e]
+                 (.stopPropagation e)
+                 (rf/dispatch [:zf/on-change form-path field-path nil]))}]]]
+           (when (:open? @state)
+             [:div.options.no-input
+              [:div
+               (for [{:keys [value name]} items]
+                 ^{:key value}
+                 [:div.option
+                  {:on-click
+                   (fn []
+                     (rf/dispatch [:zf/on-change form-path field-path value])
+                     (toggle))}
+                  name])]])])))))
+
+;;
+;; Collections
+;;
 
 (defn coll-input
   [form-path coll-path field-widget & [opt]]
