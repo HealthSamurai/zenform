@@ -6,6 +6,27 @@
                :cljs [zenform.util :refer-macros [with-catch]])))
 
 ;;
+;; Clojure 1.9 features
+;;
+
+#?(:clj
+   (when-not (resolve 'clojure.core/int?)
+     (defn int?
+       "Return true if x is a fixed precision integer"
+       {:added "1.9"}
+       [x] (or (instance? Long x)
+               (instance? Integer x)
+               (instance? Short x)
+               (instance? Byte x)))))
+
+#?(:clj
+   (when-not (resolve 'clojure.core/boolean?)
+     (defn boolean?
+       "Return true if x is a Boolean"
+       {:added "1.9"}
+       [x] (instance? Boolean x))))
+
+;;
 ;; Defaults
 ;;
 
@@ -34,7 +55,6 @@
    node-defaults
    {:type :field
     :field-type nil
-    :input nil
     :value nil
     :required? false
     :message-required "This value is required"
@@ -306,10 +326,6 @@
 ;; Coercion
 ;;
 
-(defn to-parse
-  [{:keys [input value]}]
-  (or input value))
-
 (defmulti unparse :field-type)
 
 (defn unparse-safe [field]
@@ -327,18 +343,16 @@
   (with-catch (parse field)))
 
 (defmethod parse :text
-  [field]
-  (let [value (to-parse field)]
-    (cond
-      (string? value) value
-      :else (str value))))
+  [{:keys [value]}]
+  (cond
+    (string? value) value
+    :else (str value)))
 
 (defmethod parse :email
-  [field]
-  (let [value (to-parse field)]
-    (cond
-      (string? value)
-      (-> value s/trim s/lower-case))))
+  [{:keys [value]}]
+  (cond
+    (string? value)
+    (-> value s/trim s/lower-case)))
 
 #?(:clj
    (defn parse-int [x]
@@ -350,54 +364,28 @@
        (when-not (js/isNaN val)
          val))))
 
-#?(:clj
-   (when-not (resolve 'clojure.core/int?)
-     (defn int?
-       "Return true if x is a fixed precision integer"
-       {:added "1.9"}
-       [x] (or (instance? Long x)
-               (instance? Integer x)
-               (instance? Short x)
-               (instance? Byte x)))))
-
-#?(:clj
-   (when-not (resolve 'clojure.core/boolean?)
-     (defn boolean?
-       "Return true if x is a Boolean"
-       {:added "1.9"}
-       [x] (instance? Boolean x))))
-
 (defmethod parse :integer
-  [field]
-  (let [value (to-parse field)]
-    (cond
-      (int? value) value
-      (string? value)
-      (-> value s/trim parse-int))))
+  [{:keys [value]}]
+  (cond
+    (int? value) value
+    (string? value)
+    (-> value s/trim parse-int)))
 
 (defmethod parse :boolean
-  [field]
-  (let [value (to-parse field)]
-    (cond
-      (boolean? value) value
-
-      (string? value)
-      (let [value (-> value s/trim s/lower-case)]
-        (cond
-          (contains? #{"true" "yes" "on" "1"} value) true
-          (contains? #{"false" "no" "off" "0"} value) false))
-
-      (int? value)
-      (cond
-        (= value 0) false
-        (= value 1) true))))
-
-(defn empty-value?
-  [x]
+  [{:keys [value]}]
   (cond
-    (nil? x) true
-    (and (string? x) (s/blank? x)) true
-    :else false))
+    (boolean? value) value
+
+    (string? value)
+    (let [value (-> value s/trim s/lower-case)]
+      (cond
+        (contains? #{"true" "yes" "on" "1"} value) true
+        (contains? #{"false" "no" "off" "0"} value) false))
+
+    (int? value)
+    (cond
+      (= value 0) false
+      (= value 1) true)))
 
 (defmulti coerce-field :type)
 
@@ -482,28 +470,6 @@
   node)
 
 ;;
-;; Input
-;;
-
-(defn set-input
-  [field input]
-  (assoc field :input input))
-
-(defn clear-input
-  [field]
-  (set-input field nil))
-
-(defn get-input
-  [{:keys [input]}]
-  input)
-
-(defn get-widget-value
-  [{:keys [input] :as field}]
-  (or (get-input field)
-      (unparse-safe field)
-      ""))
-
-;;
 ;; Trigger input
 ;;
 
@@ -516,7 +482,7 @@
   [field input]
   (-> field
       (clear-errors)
-      (set-input input)))
+      (set-value input)))
 
 (defn trigger-input
   [form path input]
