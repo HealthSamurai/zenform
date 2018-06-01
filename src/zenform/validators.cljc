@@ -40,6 +40,10 @@
   [{:keys [regex]} value]
   (re-matches regex value))
 
+(defmethod validate :choice
+  [{:keys [choice]} value]
+  (contains? (set choice) value))
+
 ;;
 ;; Forms
 ;;
@@ -83,6 +87,11 @@
   (merge validator-defaults opt
          {:type :regex
           :regex re}))
+
+(defn choice [choice & [opt]]
+  (merge validator-defaults opt
+         {:type :choice
+          :choice choice}))
 
 (def email-regex #".+?\@.+?\..+")
 

@@ -66,7 +66,8 @@
     (let [key-fn (or key-fn identity)]
       [:ul list-attr
        (for [err errors]
-         ^{:key (key-fn err)} [:li item-attr err])])))
+         ^{:key (key-fn err)}
+         [:li item-attr err])])))
 
 (defn form-errors
   [form-path & [opt]]
