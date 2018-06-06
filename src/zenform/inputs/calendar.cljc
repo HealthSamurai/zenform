@@ -1,11 +1,10 @@
 (ns zenform.inputs.calendar
   (:require
    [re-frame.core :as rf]
-   [zenform.zmethods :as zm]
    [reagent.core :as r]
-   [zenform.model :as model]
    [zenform.calendar :as cal]))
 
+#_
 (defmethod zm/init-input
   :zenform/calendar
   [_ schema date]
@@ -26,7 +25,7 @@
              (fn [x] (assoc x
                             :value v
                             :dropdown false
-                            :state (assoc (:state x) :value v))))) 
+                            :state (assoc (:state x) :value v)))))
 
 (rf/reg-event-db :zenform/calendar-set-value calendar-set-value)
 
@@ -39,7 +38,7 @@
            :prev-ev [:zenform/calendar-month path {:y y :m m} :prev]
            :cal (cal/for-month y m {:active (:value form-node)}))))
 
-(model/reg-form-cursor-sub :zenform/calendar calendar-sub)
+#_(model/reg-form-cursor-sub :zenform/calendar calendar-sub)
 
 (defn widget [{fp :form-path p :path}]
   (let [{{y :y m :m cal :cal} :cal
@@ -72,7 +71,7 @@
                       (str (:m f) "-" (:d f)))}
           (for [cell row]
             [:td.clicable {:key (:d cell)}
-             [:a.zen-cal-cell 
+             [:a.zen-cal-cell
               {:href "javascript:void(0)"
                :class (str (when (:current cell) "current")
                            " "

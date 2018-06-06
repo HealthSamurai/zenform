@@ -1,33 +1,33 @@
 (ns zenform.subs
   (:require [re-frame.core :as rf]
-            [zenform.form :as form]))
+            [zenform.node :as node]))
 
 (rf/reg-sub
- ::field
+ :zf/field
  (fn [db [_ form-path field-path]]
    (when-let [form (get-in db form-path)]
-     (form/get-field form field-path))))
+     (node/get-field form field-path))))
 
 (rf/reg-sub
- ::form-errors
+ :zf/form-errors
  (fn [db [_ form-path]]
    (when-let [form (get-in db form-path)]
-     (form/get-form-errors form))))
+     (node/get-node-errors form))))
 
 (rf/reg-sub
- ::field-errors
- (fn [db [_ form-path field-path]]
+ :zf/node-errors
+ (fn [db [_ form-path node-path]]
    (when-let [form (get-in db form-path)]
-     (form/get-field-errors form field-path))))
+     (node/get-path-errors form node-path))))
 
 (rf/reg-sub
- ::values
+ :zf/values
  (fn [db [_ form-path]]
    (when-let [form (get-in db form-path)]
-     (form/get-clean-values form))))
+     (node/get-value form))))
 
 (rf/reg-sub
- ::form-ok?
+ :zf/form-ok?
  (fn [db [_ form-path]]
    (when-let [form (get-in db form-path)]
-     (form/form-ok? form))))
+     (node/node-ok? form))))

@@ -7,7 +7,6 @@
    [re-frame.core :as rf]
    [garden.units :as u]
    [zenform.validators :as v]
-   [zenform.model :as model]
    [zenform.inputs.input :as input]
    [zenform.inputs.button-select :as button-select]
    [zenform.inputs.select :as select]
@@ -16,7 +15,6 @@
    [zenform.inputs.radio :as radio]
    [cljs.pprint :as pprint]))
 
-(def ->form-model model/->form-model)
 (def input input/widget)
 (def select select/widget)
 (def button-select button-select/widget)
