@@ -1,0 +1,15 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure     {:mvn/version "1.10.0-alpha4"}
+        org.clojure/clojurescript {:mvn/version "1.10.238"}
+        re-frame {:mvn/version "0.10.5"}}
+
+
+ :aliases {:dev {:extra-paths ["test"]
+                 :extra-deps {org.clojure/tools.cli {:mvn/version "0.3.7"}
+                              binaryage/devtools {:mvn/version "0.9.10"}
+                              re-frisk {:mvn/version "0.5.4"}
+
+                              com.cemerick/piggieback         {:mvn/version "0.2.2" :exclusions [com.google.javascript/closure-compiler]}
+                              figwheel-sidecar                {:mvn/version "0.5.15" :exclusions [com.google.javascript/closure-compiler]}
+
+                              org.clojure/tools.nrepl {:mvn/version "0.2.13"}}}}}
