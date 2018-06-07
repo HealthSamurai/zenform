@@ -31,3 +31,4 @@
 (alter-var-root (var re-frame.router/dispatch) (constantly dispatch))
 
 (def app-db re-frame.db/app-db)
+(def clear-subscription-cache! re-frame.core/clear-subscription-cache!)

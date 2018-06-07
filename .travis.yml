@@ -3,18 +3,14 @@ jdk:
   - oraclejdk8
 
 script:
-  - lein test
+  - ./runme tests
   - cd example
-  - lein with-profile prod cljsbuild once
-  - cp -r build/* resources/public/
-  - cd -
-  - mkdir build
-  - cp -r example/resources/public/* build/
+  - ./runme build
 
 deploy:
   provider: pages
   skip_cleanup: true
-  local_dir: build
+  local_dir: example/build
   github_token: $GITHUB_TOKEN
   on:
     branch: master

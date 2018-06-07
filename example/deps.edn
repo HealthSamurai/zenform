@@ -1,0 +1,16 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure     {:mvn/version "1.10.0-alpha4"}
+        org.clojure/clojurescript {:mvn/version "1.10.238"}
+        re-frame {:mvn/version "0.10.5"}
+        garden {:mvn/version "1.3.5"}
+        route-map {:mvn/version "0.0.7-RC1"}
+        zenform {:local/root  "../"}}
+
+ :aliases {:dev {:extra-paths ["dev" "test" "../test"]
+                 :extra-deps {matcho {:mvn/version "0.1.0-RC6"}
+                              org.clojure/tools.cli   {:mvn/version "0.3.7"}
+                              binaryage/devtools      {:mvn/version "0.9.10"}
+                              re-frisk                {:mvn/version "0.5.4"}
+                              com.cemerick/piggieback {:mvn/version "0.2.2"  :exclusions [com.google.javascript/closure-compiler]}
+                              figwheel-sidecar        {:mvn/version "0.5.15" :exclusions [com.google.javascript/closure-compiler]}
+                              org.clojure/tools.nrepl {:mvn/version "0.2.13"}}}}}

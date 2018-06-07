@@ -16,8 +16,9 @@
 (defn index []
   (rf/dispatch [:zenform/init form-path form-schema init-value])
   (fn [_]
-    [:div.row
-     [:div.col
+    [:div.container
+     [:h1 "Calendar"]
+     #_[:div.col
       [:div.form
        [:div.zen-row
         [:span.zen-label "Calendar"]
@@ -33,8 +34,8 @@
          [:div.zen-input
           [zenform/date-input {:form-path form-path :path [:end]}]]
          [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:end]}])] ]]]]]
-
-     [:div.col
+     
+     #_[:div.col
 
       [:h3 "Init value:"]
       [zenform/pprint init-value]

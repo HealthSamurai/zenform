@@ -1,0 +1,62 @@
+#!/bin/sh
+set -e
+set -x
+
+sub_help(){
+    echo "Usage: $ProgName <subcommand> [options]\n"
+    echo "Subcommands:"
+    echo "    repl  - run repl"
+    echo "    tests  - run tests"
+    echo ""
+    echo "For help with each subcommand run:"
+    echo "$ProgName <subcommand> -h|--help"
+    echo ""
+}
+  
+sub_repl(){
+
+  echo "Starting repl..."
+
+  clj -A:dev -Sdeps '{:deps {org.clojure/tools.nrepl {:mvn/version "0.2.13"} refactor-nrepl {:mvn/version "2.4.0-SNAPSHOT"} cider/cider-nrepl {:mvn/version "0.17.0"}}}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["refactor-nrepl.middleware/wrap-refactor", "cider.nrepl/cider-middleware"])'
+}
+
+sub_tests(){
+  echo "Running tests..."
+
+cat << EOF |
+  -d, --dir DIRNAME       Name of the directory containing tests. Defaults to "test".
+  -n, --namespace SYMBOL  Symbol indicating a specific namespace to test.
+  -v, --var SYMBOL        Symbol indicating the fully qualified name of a specific test.
+  -i, --include KEYWORD   Run only tests that have this metadata keyword.
+  -e, --exclude KEYWORD   Exclude tests with this metadata keyword.
+  -h, --help              Display this help message
+EOF
+
+  clj -A:dev -m test-runner
+
+}
+
+sub_build(){
+    mkdir -p build/js
+    cp resources/public/*.png build
+    # cp resources/public/*.css build
+    cp -R resources/public/css build
+    clojure -A:dev build.clj build
+
+    HASH=`cat build/js/ui.js | md5sum || cat build/js/ui.js | md5`
+    cat resources/public/index.html |  sed "s/CACHE_ID/$HASH/g" > build/index.html
+}
+
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help")
+        sub_help
+        ;;
+    *)
+        shift
+        sub_${subcommand} $@
+        export EXIT_CODE=$?
+        echo "Exit with $EXIT_CODE"
+        exit $EXIT_CODE
+        ;;
+esac

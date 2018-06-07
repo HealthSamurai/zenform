@@ -14,10 +14,10 @@
    [ui.routing]
    [ui.routes :refer [routes href pages] :as ui-routes]
 
-   [zenform.styles :as zstyles]
+   ;; [zenform.styles :as zstyles]
    [ui.index-page]
    [ui.calendar-page]
-   [ui.styles-page]
+   ;; [ui.styles-page]
    ))
 
 
@@ -28,13 +28,13 @@
 (defn style [gcss]
   [:style (garden/css gcss)])
 
-(def zstyles (garden/css zstyles/all))
+;; (def zstyles (garden/css zstyles/all))
 
 (defn current-page []
   (let [current-route (rf/subscribe [:route-map/current-route])]
     (fn []
       [:div
-       [:style zstyles]
+       ;; [:style zstyles]
        (let [{page :match params :params} @current-route]
          (if page
            (if-let [cmp (:cmp (ui-routes/resolve-page (:id page)))]
@@ -68,11 +68,12 @@
 
 (def styles
   (style
-   (let [nav-width 300]
+   (let [nav-width 100]
      [:body
       {:font-family "Roboto, sans-serif"}
-      [:.topnav {:border-bottom "1px solid #f1f1f1"
-                 :text-align "center"}
+      [:.form-control {:background-color "#f9f9f9!important"}]
+      [:.topnav {:border-bottom "1px solid #f1f1f1" :text-align "center"
+                 :margin-bottom "20px"}
        [:.brand {:display "inline-block"
                  :font-size (u/px 30)
                  :font-weight "bold"
@@ -84,10 +85,7 @@
                      :top (u/px 67)
                      :bottom 0
                      :left 0}]
-      [:.pane {:margin {:left (u/px (+ nav-width 20))
-                        :top (u/px 20)
-                        :right (u/px 40)}
-               :padding (u/px 40)}]
+      [:.pane {:margin ""}]
       [:h1 {:margin-bottom (u/px 30)
             :font-weight :normal
             :font-size (u/px h3)
@@ -111,7 +109,7 @@
      " "
      "zenform"]]
    [navigation]
-   [:div.pane [current-page]]])
+   [current-page]])
 
 (rf/reg-event-fx
  ::initialize
