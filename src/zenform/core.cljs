@@ -7,6 +7,9 @@
 
 (def text-input #'inputs/text-input)
 (def invalid-feedback #'inputs/invalid-feedback)
+(def select #'inputs/select)
+(def toggle #'inputs/toggle)
+(def radio  #'inputs/radio)
 
 (defn form-value [form-path]
   (let [v (rf/subscribe [:zf/get-value form-path])]

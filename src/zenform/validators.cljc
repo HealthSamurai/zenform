@@ -25,3 +25,10 @@
   (when v
     (when-not (re-matches email-regex v)
       (or msg "Should be valid email"))))
+
+(defmethod validate
+  :pattern
+  [{rx :regex msg :message} v]
+  (when v
+    (when-not (re-matches rx v)
+      (or msg (str "Should match " rx)))))

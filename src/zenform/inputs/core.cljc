@@ -18,3 +18,31 @@
       (let [errs (:errors @node)]
         [:div.invalid-feedback
          (str/join ", " (vals errs))]))))
+
+(defn select [form-path path & [attrs]]
+  (let [node (rf/subscribe [:zf/node form-path path])
+        on-change (fn [x] (rf/dispatch [:zf/set-value form-path path (.. x -target -value)]))]
+    (fn [& _]
+      (let [*node @node
+            v (:value *node)
+            errs (:errors *node)]
+        [:select.form-control (assoc attrs :on-change on-change)
+         (for [i (:items *node)]
+           [:option {:key (or (:id i) (:value i)) :value (:value i)}
+            (:display i)])]))))
+
+(defn toggle [form-path path & [attrs]]
+  (let [node (rf/subscribe [:zf/node form-path path])
+        on-change (fn [] (rf/dispatch [:zf/set-value form-path path (not (:value @node))]))]
+    (fn [& _]
+      (let [*node @node v (:value *node)]
+        [:div.toggle.btn {:on-click on-change :class (if v "btn-primary" "btn-light")}
+         (or (get (:toggle *node) v) (str v))]))))
+
+(defn radio [form-path path value]
+  (let [node (rf/subscribe [:zf/node form-path path])
+        on-change (fn [] (rf/dispatch [:zf/set-value form-path path value]))]
+    (fn [& _]
+      (let [*node @node v (:value *node)]
+        [:div.zf-radio {:on-click on-change :class (when (= v value) "active")}
+         (when v [:div.zf-radio-circle])]))))
