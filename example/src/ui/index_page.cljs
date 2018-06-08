@@ -11,7 +11,13 @@
    :fields {:name {:type :string
                    :validators {:required {}}}
             :email {:type :string
-                    :validators {:email {}}}}})
+                    :validators {:email {}}}
+            :role {:type :string
+                   :items [{:value "admin" :display "admin"}
+                           {:value "user" :display "user"}]}
+
+            :active {:type :boolean
+                     :toggle {false "Inactive" true "Active" nil "Inactive"}}}})
 
 (def init-value {:name "Nikolai" :email "nik@l.ai"})
 
@@ -21,12 +27,10 @@
     [:div.container
      [:h1 "Welcome to zenform!"]
      [:div.row
-      
       [:div.col
        [:div.form
         [:div.zen-row
          [:div.form-group
-          
           [:label "Name: "
            [:code (pr-str ['zenform/input form-path [:name]])]]
           [zenform/text-input form-path [:name]]
@@ -36,7 +40,17 @@
         [:div.form-group
          [:label "Email: " [:code (pr-str ['zenform/text-input form-path [:email]])]]
          [zenform/text-input form-path [:email]]
-         [zenform/invalid-feedback form-path [:email]]]]]
+         [zenform/invalid-feedback form-path [:email]]]]
+
+       [:div.form-group
+        [:label "Role: " [:code (pr-str ['zenform/ut form-path [:email]])]]
+        [zenform/select form-path [:role]]
+        [zenform/invalid-feedback form-path [:role]]]
+
+       [:div.form-group
+        [:label "Active: " [:code (pr-str ['zenform/toggle form-path [:active]])]]
+        [zenform/toggle form-path [:active]]
+        [zenform/invalid-feedback form-path [:active]]]]
 
       [:div.col
 
