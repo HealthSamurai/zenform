@@ -40,15 +40,19 @@
 (defn *get-value [form]
   (cond
     (and (:value form) (= :collection (:type form)))
-    (->> (mapv *get-value (mapv second (sort-by first (:value form))))
-         (filterv #(not (nil? %))))
+    (let [res (->> (mapv *get-value (mapv second (sort-by first (:value form))))
+                   (filterv #(not (nil? %))))]
+      (when-not (empty? res) res))
+    
 
     (and  (map? form) (map? (:value form)) (= :form (:type form)))
-    (reduce (fn [acc [k node]]
-              (let [v (*get-value node)]
-                (if-not (nil? v)
-                  (assoc acc k v)
-                  acc))) {} (:value form))
+    (let [res (reduce (fn [acc [k node]]
+                        (let [v (*get-value node)]
+                          (if-not (nil? v)
+                            (assoc acc k v)
+                            acc))) {} (:value form))]
+      (when-not (empty? res) res))
+    
 
     :else (:value form)))
 
@@ -88,6 +92,37 @@
         (recur (update-in form (get-node-path path) *on-value-set)
                (butlast path))))))
 
+;; this fn will fuck your brain
+;; it evals all validators and collect errors
+;; at the same time collect value
+;; intended to be used at submit
+(defn *eval-form [{tp :type v :value :as node}]
+  (if (or (= tp :collection) (= tp :form))
+    (let [{v :value :as res}
+          (reduce (fn [res [idx n]]
+                    (let [{v :value err :errors ch-node :form} (*eval-form n)
+                          res (if (empty? err) res
+                                  (update res :errors (fn [es]
+                                                        (reduce (fn [es [err-k err-v]]
+                                                                  (assoc es (into [idx] err-k) err-v))
+                                                                es err))))
+                          res (-> res (assoc-in [:form :value idx] ch-node))]
+                      (cond-> res 
+                        (and (not (nil? v)) (= tp :collection)) (update :value conj v)
+                        (and (not (nil? v)) (= tp :form))       (assoc-in [:value idx] v)))
+                    ) {:value   (if (= tp :form) {} []) :errors  {} :form node} v)
+          errs (validate-node node v)]
+      (cond-> (update res :value (fn [x] (when-not (empty? x) x)))
+        errs (assoc-in [:errors []] errs)
+        errs (assoc-in [:form :errors] errs)))
+
+    (let [errs (validate-node node v)
+          node (cond-> (assoc node :touched true) errs (assoc :errors errs))]
+      (cond-> {:value v :form node}
+        errs (assoc :errors {[] errs})))))
+
+(defn eval-form [form]
+  (*eval-form form))
 
 (rf/reg-event-db
  :zf/init 

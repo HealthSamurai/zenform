@@ -42,9 +42,15 @@
             :nick     {:type :string}
             :object   {:type :map}
             :password {:type :string
+                       :validatros {:required {}}
                        :on-change {::password-changed {}}}
             :email    {:type :collection
-                       :item {:type :string}}}})
+                       :item {:type :string
+                              :validators {:email {}}}}
+            :address {:type :form
+                      :validators {:required {}}
+                      :fields {:city {:type :string
+                                      :validators {:required {}}}}}}})
 
 (deftest form-functions-test
 
@@ -53,7 +59,6 @@
   (def form (model/form schema {:name "Ivan"
                                 :email ["ivan@ya.ru" "ivan@gmail.com"]}))
 
-  (:value form)
 
   (matcho/match 
    form
@@ -73,6 +78,7 @@
 
   (is (= [:name-changed :form-changed :password-changed :form-changed] @test-state))
 
+  (def form (model/set-value form [:address :city] "NY"))
 
   (matcho/match 
    form
@@ -86,6 +92,7 @@
 
   (is (= {:name "Nicola"
           :password "secret"
+          :address {:city "NY"}
           :email ["ivan@ya.ru" "ivan@gmail.com"]}
          (model/get-value form)))
 
@@ -103,15 +110,37 @@
    {:value {:name {:value "Nicola" :errors nil?}}})
 
   (def form (model/set-value form [:name] nil))
+  (def form (model/set-value form [:address :city] nil))
+  (def form (model/set-value form [:email 0] "ups"))
 
   (matcho/match
    form
    {:value {:name {:errors {:required "Should not be blank"}}}
     :errors {::name-or-nick "Name or Nick is required"}})
 
-  ;; (def form (model/validate form))
-
   )
+
+(deftest eval-form-test
+
+  (def form (model/form schema {:email ["ups" "ivan@gmail.com"]}))
+
+  (def form-value (model/eval-form form))
+
+  (:errors form-value)
+
+  (:value form-value)
+  (get-in form-value [:form :value :name])
+
+  (matcho/match
+   form-value
+   {:form {:value {:name    {:errors {:required "Should not be blank"}}
+                   :address {:errors {:required "Should not be blank"}}}}
+    :value {:email ["ups" "ivan@gmail.com"]}
+    :errors {[]               {::name-or-nick "Name or Nick is required"}
+             [:email 0]       {:email "Should be valid email"}
+             [:address :city] {:required "Should not be blank"}
+             [:address]       {:required "Should not be blank"}
+             [:name]          {:required "Should not be blank"}}}))
 
 (deftest zenform-test
 
@@ -139,76 +168,7 @@
   (matcho/match @name-sub {:value "Nicola"})
 
 
-  ;; (matcho/match @name-sub {:value "Default-name"})
 
-  ;; (rf/dispatch [:zenform/on-change [:form] [:name] "Nikolai"])
-
-  ;; (matcho/match @name-sub {:value "Nikolai"
-  ;;                          :errors ["Is not AAA"]})
-
-  ;; (rf/dispatch [:zenform/on-change [:form] [:name] "AAA"])
-
-  ;; (matcho/match @name-sub {:value "AAA"
-  ;;                          :errors nil})
-
-  ;; (rf/dispatch [:zenform/on-change [:form] [:name] "Nikolai"])
-
-  ;; (matcho/match @re-test/app-db
-  ;;               {:form
-  ;;                {:type "form"
-  ;;                 :value  {:name {:type :string,
-  ;;                                 :value "Nikolai"}}}})
-
-  ;; (matcho/match
-  ;;  (model/get-value (:form @re-test/app-db))
-  ;;  {:name "Nikolai"
-  ;;   :age nil?})
-
-  ;; (rf/dispatch [:zenform/on-change [:form] [:age] "100"])
-
-  ;; (matcho/match @re-test/app-db
-  ;;               {:form
-  ;;                {:type "form"
-  ;;                 :value  {:age {:value "100"}}}})
-
-  ;; (matcho/match
-  ;;  (model/get-value (:form @re-test/app-db))
-  ;;  {:name "Nikolai"
-  ;;   :age 100})
-
-  ;; (rf/dispatch [:zenform/on-change [:form] [:name] "Ivan"])
 
   )
-
-;; validators never passed nil
-
-#_(def schema
-  {:type "form"
-   :event ::on-form-change
-   :fields {:name {:type :string
-                   :required {:message "This field is required"}
-                   :validators [{:type :regex
-                                 :args [#"AAA"]
-                                 :message "Is not AAA"}]
-                   :on-change {:event ::on-change-name}}
-
-            :age {:type :integer
-                  :on-change {:event ::on-change-age}}
-
-            :date {:type :date}}})
-
-;; (rf/reg-event-fx
-;;  ::on-form-change
-;;  (fn [& x]
-;;    (assert false (pr-str x))))
-
-;; (rf/reg-event-fx
-;;  ::on-change-name
-;;  (fn [& x]))
-
-;; (rf/reg-event-fx
-;;  ::on-change-age
-;;  (fn [& x]))
-
-
 

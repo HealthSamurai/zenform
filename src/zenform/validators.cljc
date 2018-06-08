@@ -14,7 +14,10 @@
 (defmethod validate
   :required
   [{msg :message} v]
-  (when (or (nil? v) (and (string? v) (str/blank? v)))
+  (when (or (nil? v)
+            (and (string? v) (str/blank? v))
+            (and (map? v) (empty? v))
+            (and (sequential? v) (empty? v)))
     (or msg "Should not be blank")))
 
 (def email-regex #".+?\@.+?\..+")
