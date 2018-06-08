@@ -14,10 +14,10 @@
 
 (defn invalid-feedback [form-path path]
   (let [node (rf/subscribe [:zf/node form-path path])]
+    (println "IF" form-path path)
     (fn [& _]
       (let [errs (:errors @node)]
-        [:div.invalid-feedback
-         (str/join ", " (vals errs))]))))
+        [:div.invalid-feedback {:style {:display "block"}} (str/join ", " (vals errs))]))))
 
 (defn select [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])
