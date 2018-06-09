@@ -7,16 +7,32 @@
 
 (def form-path [:user-form])
 
-(rf/reg-event-db
+(rf/reg-event-fx
  ::search-country
- (fn [db [_ {q :query}]]
-   (assoc db :countries [{:id "us" :display "USA"}
-                         {:id q :display q}])))
+ (fn [{db :db} [_ {q :query items-path :items-path status-path :status-path}]]
+   {:json/fetch {:uri "https://npi.health-samurai.io/organization"
+                 :params {:q q :_count 5}
+                 :success {:event ::countries-loaded
+                           :items-path items-path
+                           :status-path status-path}}
+    :db (assoc-in db status-path :loading)}))
 
-(rf/reg-sub
- ::countries
- (fn [db _]
-   (:countries db)))
+(defn human-name [r]
+  (:name r)
+  #_(str (get-in r [:name 0 :given 0])
+       " "
+       (get-in r [:name 0 :family])))
+
+(rf/reg-event-db
+ ::countries-loaded
+ (fn [db [_ {data :data items-path :items-path status-path :status-path}]]
+   (let [items (mapv (fn [{r :resource}]
+                       {:id (:id r)
+                        :value {:id (:id r) :resourceType "Practitioner" :display (human-name r)}
+                        :display (human-name r)}) (:entry data))]
+     (-> db
+         (assoc-in items-path items)
+         (assoc-in status-path :done)))))
 
 (def form-schema
   {:type :form
@@ -33,9 +49,10 @@
                    :items [{:value "admin" :display "admin"}
                            {:value "user" :display "user"}]}
 
-            :country {:type :string
+            :country {:type :object
                       :zselect {:on-search {:event ::search-country}
-                                :items {:sub ::countries}}}
+                                :search-by :enter
+                                :search-hint "Press enter to search"}}
 
             :active {:type :boolean
                      :toggle {false "Inactive" true "Active" nil "Inactive"}}}})

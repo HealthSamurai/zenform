@@ -67,36 +67,36 @@
 (def styles
   (style
    (let [nav-width 100]
-     [:body
-      {:font-family "Roboto, sans-serif"}
-      zenform/styles
-      [:.form-control {:background-color "#f9f9f9!important"}]
-      [:.topnav {:border-bottom "1px solid #f1f1f1" :text-align "center"
-                 :margin-bottom "20px"}
-       [:.brand {:display "inline-block"
-                 :font-size (u/px 30)
-                 :font-weight "bold"
-                 :margin {:left (u/px 20)}
-                 :font-family "lato"
-                 :padding (u/px 10)}]]
-      [:.navigation {:width (u/px nav-width)
-                     :position "absolute"
-                     :top (u/px 67)
-                     :bottom 0
-                     :left 0}]
-      [:.pane {:margin ""}]
-      [:h1 {:margin-bottom (u/px 30)
-            :font-weight :normal
-            :font-size (u/px h3)
-            :line-height (u/px* h3 1.5)}]
-      [:.re-form-row {:margin-top (u/px h2)}]
-      [:pre {:background-color "#f1f1f1" :padding "20px" :border "1px solid #ddd"} ]
-      [:label {:display "block"
-               :margin-bottom (u/px 2)
-               :font-size (u/px h)
-               :line-height (u/px (/ (* h 3) 2))
-               :padding-right "10px"}]
-      [:.errors {:color "red"}]])))
+     [zenform/styles
+      [:body
+       {:font-family "Roboto, sans-serif"}
+       [:.form-control {:background-color "#f9f9f9!important"}]
+       [:.topnav {:border-bottom "1px solid #f1f1f1" :text-align "center"
+                  :margin-bottom "20px"}
+        [:.brand {:display "inline-block"
+                  :font-size (u/px 30)
+                  :font-weight "bold"
+                  :margin {:left (u/px 20)}
+                  :font-family "lato"
+                  :padding (u/px 10)}]]
+       [:.navigation {:width (u/px nav-width)
+                      :position "absolute"
+                      :top (u/px 67)
+                      :bottom 0
+                      :left 0}]
+       [:.pane {:margin ""}]
+       [:h1 {:margin-bottom (u/px 30)
+             :font-weight :normal
+             :font-size (u/px h3)
+             :line-height (u/px* h3 1.5)}]
+       [:.re-form-row {:margin-top (u/px h2)}]
+       [:pre {:background-color "#f1f1f1" :padding "20px" :border "1px solid #ddd"} ]
+       [:label {:display "block"
+                :margin-bottom (u/px 2)
+                :font-size (u/px h)
+                :line-height (u/px (/ (* h 3) 2))
+                :padding-right "10px"}]
+       [:.errors {:color "red"}]]])))
 
 (defn root-component []
   [:div [:h1 "Hello"]]
