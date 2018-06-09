@@ -17,6 +17,7 @@
    ;; [zenform.styles :as zstyles]
    [ui.index-page]
    [ui.calendar-page]
+   [zenform.core :as zenform]
    ;; [ui.styles-page]
    ))
 
@@ -28,13 +29,10 @@
 (defn style [gcss]
   [:style (garden/css gcss)])
 
-;; (def zstyles (garden/css zstyles/all))
-
 (defn current-page []
   (let [current-route (rf/subscribe [:route-map/current-route])]
     (fn []
       [:div
-       ;; [:style zstyles]
        (let [{page :match params :params} @current-route]
          (if page
            (if-let [cmp (:cmp (ui-routes/resolve-page (:id page)))]
@@ -71,6 +69,7 @@
    (let [nav-width 100]
      [:body
       {:font-family "Roboto, sans-serif"}
+      zenform/styles
       [:.form-control {:background-color "#f9f9f9!important"}]
       [:.topnav {:border-bottom "1px solid #f1f1f1" :text-align "center"
                  :margin-bottom "20px"}

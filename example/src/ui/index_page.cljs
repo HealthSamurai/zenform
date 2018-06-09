@@ -7,6 +7,17 @@
 
 (def form-path [:user-form])
 
+(rf/reg-event-db
+ ::search-country
+ (fn [db [_ {q :query}]]
+   (assoc db :countries [{:id "us" :display "USA"}
+                         {:id q :display q}])))
+
+(rf/reg-sub
+ ::countries
+ (fn [db _]
+   (:countries db)))
+
 (def form-schema
   {:type :form
    :fields {:name {:type :string
@@ -21,6 +32,10 @@
             :role {:type :string
                    :items [{:value "admin" :display "admin"}
                            {:value "user" :display "user"}]}
+
+            :country {:type :string
+                      :zselect {:on-search {:event ::search-country}
+                                :items {:sub ::countries}}}
 
             :active {:type :boolean
                      :toggle {false "Inactive" true "Active" nil "Inactive"}}}})
@@ -75,6 +90,11 @@
           [:label "Active: " [:code (pr-str ['zenform/toggle form-path [:active]])]]
           [zenform/toggle form-path [:active]]
           [zenform/invalid-feedback form-path [:active]]]
+
+         [:div.form-group
+          [:label "Country!: " [:code (pr-str ['zenform/toggle form-path [:active]])]]
+          [zenform/zselect form-path [:country]]
+          [zenform/invalid-feedback form-path [:country]]]
 
          [:hr]
          [:button.btn.btn-success {:on-click #(rf/dispatch [::submit])} "Submit"]

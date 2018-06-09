@@ -10,7 +10,7 @@
                                            :server-port 3777
                                            :server-ip   "0.0.0.0"})
    :all-builds       [{:id "ui" 
-                       :source-paths ["src"]
+                       :source-paths ["src" "../src"]
                        :compiler
                        {:main "ui.dev"
                         :asset-path "/js/out"
@@ -29,6 +29,6 @@
 
 (comment
   (start)
-
+  
   )
 

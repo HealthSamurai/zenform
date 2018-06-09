@@ -10,6 +10,9 @@
 (def select #'inputs/select)
 (def toggle #'inputs/toggle)
 (def radio  #'inputs/radio)
+(def zselect  #'inputs/zselect)
+
+(def styles inputs/styles)
 
 (defn form-value [form-path]
   (let [v (rf/subscribe [:zf/get-value form-path])]
