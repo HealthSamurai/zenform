@@ -13,6 +13,7 @@
 (def radio  #'inputs/radio)
 (def zselect  #'inputs/zselect)
 (def calendar  #'inputs/calendar)
+(def button-groups  #'inputs/button-groups)
 (def codemirror  #'cm/input)
 
 (def styles inputs/styles)

@@ -55,7 +55,11 @@
                                 :search-hint "Press enter to search"}}
 
             :active {:type :boolean
-                     :toggle {false "Inactive" true "Active" nil "Inactive"}}}})
+                     :toggle {false "Inactive" true "Active" nil "Inactive"}}
+            :groups {:type :string
+                     :items [{:label "One" :value "one"}
+                             {:label "Two" :value "two"}
+                             {:label "Three" :value "three"}]}}})
 
 (def init-value {:name "Nikolai" :email "nik@l.ai"})
 
@@ -99,7 +103,7 @@
            [zenform/invalid-feedback form-path [:email]]]]
 
          [:div.form-group
-          [:label "Role: " [:code (pr-str ['zenform/ut form-path [:email]])]]
+          [:label "Role: " [:code (pr-str ['zenform/ut form-path [:role]])]]
           [zenform/select form-path [:role]]
           [zenform/invalid-feedback form-path [:role]]]
 
@@ -109,9 +113,14 @@
           [zenform/invalid-feedback form-path [:active]]]
 
          [:div.form-group
-          [:label "Country!: " [:code (pr-str ['zenform/toggle form-path [:active]])]]
+          [:label "Country!: " [:code (pr-str ['zenform/toggle form-path [:country]])]]
           [zenform/zselect form-path [:country]]
           [zenform/invalid-feedback form-path [:country]]]
+
+         [:div.form-group
+          [:label "Groups: " [:code (pr-str ['zenform/button-groups form-path [:groups]])]]
+          [zenform/button-groups form-path [:groups]]
+          [zenform/invalid-feedback form-path [:groups]]]
 
          [:hr]
          [:button.btn.btn-success {:on-click #(rf/dispatch [::submit])} "Submit"]
@@ -136,4 +145,3 @@
 
 (ui-routes/reg-page
  :index {:title "Welcome" :w 1 :cmp index})
-

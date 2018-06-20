@@ -46,6 +46,18 @@
         [:div.toggle.btn {:on-click on-change :class (if v "btn-primary" "btn-light")}
          (or (get (:toggle *node) v) (str v))]))))
 
+(defn button-groups [form-path path & [attrs]]
+  (let [node (rf/subscribe [:zf/node form-path path])
+        on-change (fn [v] (rf/dispatch [:zf/set-value form-path path v]))]
+    (fn [& _]
+      (let [*node @node v (:value *node)]
+        (into [:div.btn-group]
+              (map (fn [{:keys [label value]}]
+                     [:button.btn.btn-secondary
+                      {:on-click #(on-change value)}
+                        label])
+                   (:items *node)))))))
+
 (defn radio [form-path path value]
   (let [node (rf/subscribe [:zf/node form-path path])
         on-change (fn [] (rf/dispatch [:zf/set-value form-path path value]))]
