@@ -251,26 +251,29 @@
 
 (defn input [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])
+        value (rf/subscribe [:zf/get-value form-path path])
         cm (atom nil)
         cm-opts (merge default-cm-options (:code-mirror attrs))
         attrs (assoc attrs :on-change #(rf/dispatch [:zf/set-value form-path path (.. % -target -value)]))]
 
     (r/create-class
-     {:reagent-render (fn [opts] [:textarea])
+     {:reagent-render (fn [opts] @value
+                        ;; This code is needed to update textarea value on db update
+                        [:textarea])
 
       :component-did-mount
       (fn [this]
         (let [*cm (fromTextArea (r/dom-node this) cm-opts)]
           (reset! cm *cm)
-          (.setValue *cm (.toString (or (:value @node) "")))
+          (.setValue *cm (.toString (or @value "")))
           (.on *cm "change"
                (fn [& _] (rf/dispatch [:zf/set-value form-path path (.getValue *cm)])))))
 
       :component-did-update
       (fn [this [_ old-props]]
         (let [*cm @cm]
-          (when (not= (.getValue *cm) (:value @node) )
-            (.setValue *cm (.toString (:value @node))))))})
+          (when (not= (.getValue *cm) @value )
+            (.setValue *cm (.toString @value)))))})
     ))
 
 #_(defn codemirror [opts]
