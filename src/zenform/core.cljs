@@ -3,7 +3,8 @@
    [cljs.pprint :as pprint]
    [re-frame.core :as rf]
    [zenform.model :as model]
-   [zenform.inputs.core :as inputs]))
+   [zenform.inputs.core :as inputs]
+   [zenform.inputs.codemirror :as cm]))
 
 (def text-input #'inputs/text-input)
 (def invalid-feedback #'inputs/invalid-feedback)
@@ -12,6 +13,7 @@
 (def radio  #'inputs/radio)
 (def zselect  #'inputs/zselect)
 (def calendar  #'inputs/calendar)
+(def codemirror  #'cm/input)
 
 (def styles inputs/styles)
 
@@ -27,9 +29,3 @@
 
 (defn pprint [v]
   [:pre (with-out-str (pprint/pprint v))])
-
-
-(comment
-
-  (js/console.log "here")
-  )
