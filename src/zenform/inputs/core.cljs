@@ -2,12 +2,14 @@
   (:require [zenform.model :as model]
             [re-frame.core :as rf]
             [clojure.string :as str]
-            [zenform.inputs.zselect :as zselect]))
+            [zenform.inputs.zselect :as zselect]
+            [zenform.inputs.calendar :as calendar]))
 
 (def styles
   [zselect/style])
 
 (def zselect zselect/zselect)
+(def calendar calendar/calendar)
 
 (defn text-input [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])

@@ -11,6 +11,7 @@
 (def toggle #'inputs/toggle)
 (def radio  #'inputs/radio)
 (def zselect  #'inputs/zselect)
+(def calendar  #'inputs/calendar)
 
 (def styles inputs/styles)
 

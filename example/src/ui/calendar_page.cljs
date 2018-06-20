@@ -1,50 +1,25 @@
 (ns ui.calendar-page
   (:require
    [zenform.core :as zenform]
+   [zenform.model :as model]
    [re-frame.core :as rf]
    [ui.routes :as ui-routes]))
 
 (def form-path [:user-form])
 
 (def form-schema
-  {:type "form"
+  {:type :form
    :fields {:start {:type :date}
             :end   {:type :date}}})
 
 (def init-value {})
 
 (defn index []
-  (rf/dispatch [:zenform/init form-path form-schema init-value])
+  (rf/dispatch   [:zf/init form-path form-schema {}])
   (fn [_]
     [:div.container
      [:h1 "Calendar"]
-     #_[:div.col
-      [:div.form
-       [:div.zen-row
-        [:span.zen-label "Calendar"]
-        [:div.zen-col
-         [:div.zen-input
-          [:div.zen-notes [:code (pr-str ['zenform/calendar {:form-path form-path :path [:start]}])]]
-          [zenform/calendar {:form-path form-path :path [:start]}]]]]
-
-       [:br]
-       [:div.zen-row
-        [:span.zen-label "Date"]
-        [:div.zen-col
-         [:div.zen-input
-          [zenform/date-input {:form-path form-path :path [:end]}]]
-         [:div.zen-notes [:code (pr-str ['zenform/input {:form-path form-path :path [:end]}])] ]]]]]
-     
-     #_[:div.col
-
-      [:h3 "Init value:"]
-      [zenform/pprint init-value]
-
-      [:h3 "Form value:"]
-      [zenform/form-value form-path]
-      [:hr]
-      [:h3 "Form model"]
-      [zenform/form-model form-path]]]))
+     [zenform/calendar form-path [:start]]]))
 
 
 (ui-routes/reg-page
