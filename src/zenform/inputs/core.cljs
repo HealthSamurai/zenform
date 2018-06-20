@@ -46,17 +46,30 @@
         [:div.toggle.btn {:on-click on-change :class (if v "btn-primary" "btn-light")}
          (or (get (:toggle *node) v) (str v))]))))
 
-(defn button-groups [form-path path & [attrs]]
+(defn radio-group [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])
         on-change (fn [v] (rf/dispatch [:zf/set-value form-path path v]))]
     (fn [& _]
-      (let [*node @node v (:value *node)]
-        (into [:div.btn-group]
-              (map (fn [{:keys [label value]}]
-                     [:button.btn.btn-secondary
-                      {:on-click #(on-change value)}
-                        label])
-                   (:items *node)))))))
+      (let [{:keys [items] current-value :value} @node]
+        (into [:div.btn-group {:tab-index 0
+                               :on-key-down
+                               (fn [e]
+                                 (let [[before [_ & after]] (split-with (fn [{:keys [value]}]
+                                                                          (not= value current-value))
+                                                                        items)
+                                       left-option (last before)
+                                       right-option (first after)
+                                       pressed-key (.-key e)]
+                                   (when (#{"ArrowLeft" "ArrowUp" "ArrowRight" "ArrowDown"} pressed-key)
+                                     (.preventDefault e))
+                                   (cond (and (#{"ArrowLeft" "ArrowUp"} pressed-key) left-option)
+                                         (on-change (:value left-option))
+                                         (and (#{"ArrowRight" "ArrowDown"} pressed-key) right-option)
+                                         (on-change (:value right-option)))))}]
+              (for [{:keys [label value]} items]
+                [:div.btn.btn-secondary {:class (when (= value current-value) "active")
+                                         :on-click #(on-change value)}
+                 label]))))))
 
 (defn radio [form-path path value]
   (let [node (rf/subscribe [:zf/node form-path path])
