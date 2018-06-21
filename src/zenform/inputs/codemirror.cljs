@@ -265,9 +265,12 @@
 
       :component-did-mount
       (fn [this]
-        (let [*cm (fromTextArea (r/dom-node this) cm-opts)]
+        (let [*cm (fromTextArea (r/dom-node this) cm-opts)
+              sv (aget *cm "setValue")]
           (reset! cm *cm)
-          (.setValue *cm (.toString (or @value "")))
+          (.call sv *cm (.toString (or @value "")))
+          ;; (.setValue *cm (.toString (or @value "")))
+          (println "sv>> " sv)
           (.on *cm "change"
                (fn [& _] (rf/dispatch [:zf/set-value form-path path (.getValue *cm)])))))
 
