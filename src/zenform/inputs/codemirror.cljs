@@ -273,15 +273,15 @@
           (.call sv *cm (.toString (or @value "")))
           ;; (.setValue *cm (.toString (or @value "")))
           (.call on *cm "change"
-                 (fn [& _] (rf/dispatch [:zf/set-value form-path path (.call gv *cm)])))
-          (println "on>> " on)
-          ))
+                 (fn [& _] (rf/dispatch [:zf/set-value form-path path (.call gv *cm)])))))
+
       :component-did-update
-      (fn [this [_ old-props]]
+      (fn [this [_ old-props]
+          sv (aget *cm "setValue")
+          gv (aget *cm "getValue")]
         (let [*cm @cm]
-          (when (not= (.getValue *cm) @value)
-            (.setValue *cm (.toString @value)))))})
-    ))
+          (when (not= (.call gv *cm) @value)
+            (.call sv *cm (.toString @value)))))})))
 
 #_(defn codemirror [opts]
   #_(let [value (rf/subscribe [:re-form/data (into (:base-path opts) (:path opts))])

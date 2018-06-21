@@ -132,7 +132,6 @@
 (rf/reg-event-db
  :zf/set-value
  (fn [db [_ form-path path v]]
-   (println "setting form value: " form-path path v)
    (update-in db form-path (fn [form] (set-value form path v)))))
 
 (rf/reg-sub
