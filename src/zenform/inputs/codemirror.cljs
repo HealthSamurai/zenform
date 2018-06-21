@@ -254,7 +254,8 @@
         value (rf/subscribe [:zf/get-value form-path path])
         cm (atom nil)
         cm-opts (merge default-cm-options (:code-mirror attrs))
-        attrs (assoc attrs :on-change #(rf/dispatch [:zf/set-value form-path path (.. % -target -value)]))]
+        ;; attrs (assoc attrs :on-change #(rf/dispatch [:zf/set-value form-path path (.. % -target -value)]))
+        ]
 
     (r/create-class
      {:reagent-render (fn [opts]
@@ -273,7 +274,7 @@
       :component-did-update
       (fn [this [_ old-props]]
         (let [*cm @cm]
-          (when (not= (.getValue *cm) @value )
+          (when (not= (.getValue *cm) @value)
             (.setValue *cm (.toString @value)))))})
     ))
 
