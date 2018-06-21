@@ -118,8 +118,8 @@
           [zenform/invalid-feedback form-path [:country]]]
 
          [:div.form-group
-          [:label "Groups: " [:code (pr-str ['zenform/button-groups form-path [:groups]])]]
-          [zenform/button-groups form-path [:groups]]
+          [:label "Groups: " [:code (pr-str ['zenform/radio-group form-path [:groups]])]]
+          [zenform/radio-group form-path [:groups]]
           [zenform/invalid-feedback form-path [:groups]]]
 
          [:hr]
