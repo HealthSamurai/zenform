@@ -276,10 +276,10 @@
                  (fn [& _] (rf/dispatch [:zf/set-value form-path path (.call gv *cm)])))))
 
       :component-did-update
-      (fn [this [_ old-props]
-          sv (aget *cm "setValue")
-          gv (aget *cm "getValue")]
-        (let [*cm @cm]
+      (fn [this [_ old-props]]
+        (let [*cm @cm
+              sv (aget *cm "setValue")
+              gv (aget *cm "getValue")]
           (when (not= (.call gv *cm) @value)
             (.call sv *cm (.toString @value)))))})))
 
