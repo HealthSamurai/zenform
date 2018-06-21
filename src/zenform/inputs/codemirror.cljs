@@ -259,7 +259,7 @@
 
     (r/create-class
      {:reagent-render (fn [opts]
-                        (println @value)
+                        @value
                         ;; This code is needed to update textarea value on db update
                         [:textarea])
 
