@@ -4,11 +4,11 @@
 
 (def Doc (.-Doc js/CodeMirror))
 
-(defn create-editor
-  ([config]
-   (js/CodeMirror (.-body js/document) (clj->js config)))
-  ([dom config]
-   (js/CodeMirror dom (clj->js config))))
+(defn codemirror
+  ([node]
+   (js/CodeMirror. node))
+  ([node config]
+   (js/CodeMirror. node (clj->js config))))
 
 
 (defn fromTextArea
@@ -253,24 +253,24 @@
   (let [node (rf/subscribe [:zf/node form-path path])
         value (rf/subscribe [:zf/get-value form-path path])
         cm (atom nil)
-        cm-opts (merge default-cm-options (:code-mirror attrs))
+        st (atom attrs)
+        cm-opts (merge default-cm-options attrs)
         ;; attrs (assoc attrs :on-change #(rf/dispatch [:zf/set-value form-path path (.. % -target -value)]))
         ]
-
     (r/create-class
-     {:reagent-render (fn [opts]
-                        @value
-                        ;; This code is needed to update textarea value on db update
-                        [:textarea])
+     {:reagent-render (fn [form-path path & [attrs]]
+                        (reset! st attrs)
+                        @value ;; This code is needed to update textarea value on db update
+                        [:div])
 
       :component-did-mount
       (fn [this]
-        (let [*cm (fromTextArea (r/dom-node this) cm-opts)
+        (let [*cm (codemirror (r/dom-node this) cm-opts)
               sv (aget *cm "setValue")
               gv (aget *cm "getValue")
               on (aget *cm "on")]
           (reset! cm *cm)
-          (.call sv *cm (.toString (or @value "")))
+          (.call sv *cm (.toString (or @value (get cm-opts "value") "")))
           ;; (.setValue *cm (.toString (or @value "")))
           (.call on *cm "change"
                  (fn [& _] (rf/dispatch [:zf/set-value form-path path (.call gv *cm)])))))
@@ -280,12 +280,7 @@
         (let [*cm @cm
               sv (aget *cm "setValue")
               gv (aget *cm "getValue")]
-          (when (not= (.call gv *cm) @value)
-            (.call sv *cm (.toString @value)))))})))
+          (doseq [[k v] @st] (.setOption @cm k v))
 
-#_(defn codemirror [opts]
-  #_(let [value (rf/subscribe [:re-form/data (into (:base-path opts) (:path opts))])
-        cm (atom nil)
-        path (into (:base-path opts) (:path opts))
-        cm-opts (merge default-cm-options (:code-mirror opts))]
-    ))
+          #_(when (not= (.call gv *cm) @value)
+            (.call sv *cm (.toString @value)))))})))
