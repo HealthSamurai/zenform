@@ -257,7 +257,8 @@
         attrs (assoc attrs :on-change #(rf/dispatch [:zf/set-value form-path path (.. % -target -value)]))]
 
     (r/create-class
-     {:reagent-render (fn [opts] @value
+     {:reagent-render (fn [opts]
+                        (println @value)
                         ;; This code is needed to update textarea value on db update
                         [:textarea])
 
