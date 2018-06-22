@@ -261,7 +261,7 @@
      {:reagent-render (fn [form-path path & [attrs]]
                         (reset! st attrs)
                         @value ;; This code is needed to update textarea value on db update
-                        [:div])
+                        [:div.zen-codemirror])
 
       :component-did-mount
       (fn [this]
