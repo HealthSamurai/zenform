@@ -92,6 +92,16 @@
         (recur (update-in form (get-node-path path) *on-value-set)
                (butlast path))))))
 
+
+(defn raw-value
+  "Return raw form value"
+  [v]
+  (clojure.walk/prewalk
+   (fn [x]
+     (if (and (map? x) (:value x))
+       (:value x)
+       x)) v))
+
 ;; this fn will fuck your brain
 ;; it evals all validators and collect errors
 ;; at the same time collect value

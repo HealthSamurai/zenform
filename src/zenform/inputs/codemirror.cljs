@@ -277,10 +277,9 @@
 
       :component-did-update
       (fn [this [_ old-props]]
-        (let [*cm @cm
-              sv (aget *cm "setValue")
-              gv (aget *cm "getValue")]
-          (doseq [[k v] @st] (.setOption @cm k v))
-
-          #_(when (not= (.call gv *cm) @value)
-            (.call sv *cm (.toString @value)))))})))
+        (let [*cm @cm]
+          ;;(println @st)
+          (doseq [[k v] @st]
+            (if (not= k "extraKeys")
+              (.setOption @cm k v)))
+          ))})))
