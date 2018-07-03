@@ -135,7 +135,7 @@
   (*eval-form form))
 
 (rf/reg-event-db
- :zf/init 
+ :zf/init
  (fn [db [_ form-path schema value]]
    (assoc-in db form-path (form schema value))))
 

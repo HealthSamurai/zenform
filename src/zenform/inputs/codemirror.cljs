@@ -279,6 +279,8 @@
       (fn [this [_ old-props]]
         (let [*cm @cm]
           ;;(println @st)
+          (if-not (= @value (.call (aget *cm "getValue") *cm))
+            (.setOption @cm "value" @value))
           (doseq [[k v] @st]
             (if (not= k "extraKeys")
               (.setOption @cm k v)))
