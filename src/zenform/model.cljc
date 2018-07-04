@@ -159,4 +159,35 @@
        (get-value form path)
        (get-value form)))))
 
+(defn add-collection-item [form path v]
+  (let [node (get-in form (get-node-path path))]
+    (if (= :collection (:type node))
+      (let [coll (:value node)
+            idx (if (empty? coll)
+                  0
+                  (inc (first (apply max-key key coll))))]
+        (set-value form (conj path idx) v))
+      form)))
 
+(defn remove-collection-item [form path idx]
+  (let [node-path (get-node-path path)]
+    (if (= :collection (get-in form (conj node-path :type)))
+      (update-in form (conj node-path :value) dissoc idx)
+      form)))
+
+(rf/reg-event-db
+ :zf/add-collection-item
+ (fn [db [_ form-path path v]]
+   (update-in db form-path (fn [form] (add-collection-item form path v)))))
+
+(rf/reg-event-db
+ :zf/remove-collection-item
+ (fn [db [_ form-path path idx]]
+   (update-in db form-path (fn [form] (remove-collection-item form path idx)))))
+
+(rf/reg-sub
+ :zf/collection
+ (fn [[_ form-path path] _]
+   (rf/subscribe [:zf/node form-path path]))
+ (fn [node _]
+   (:value node)))
