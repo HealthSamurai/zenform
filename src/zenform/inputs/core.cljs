@@ -18,7 +18,10 @@
       (let [*node @node
             v (:value *node)
             errs (:errors *node)]
-        [:input.form-control (assoc attrs :value v :class (when errs "is-invalid"))]))))
+        [:input.form-control (-> attrs
+                                 (assoc :value v)
+                                 (update :class (fn [class] (str class (when errs " is-invalid") )))) 
+         ]))))
 
 (defn invalid-feedback [form-path path]
   (let [node (rf/subscribe [:zf/node form-path path])]
