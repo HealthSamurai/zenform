@@ -1,3 +1,5 @@
+(remove-ns 'zenform.model-test)
+
 (ns zenform.model-test
   (:require [zenform.model :as model]
             [re-frame.core :as rf]
@@ -31,6 +33,12 @@
    (swap! test-state conj :form-changed)
    nil))
 
+(rf/reg-event-fx
+ ::email-changed
+ (fn [_ [_ {v :value}]]
+   (swap! test-state conj :email-changed)
+   nil))
+
 (def schema
   {:type :form
    :validators {::name-or-nick {:message "Name or Nick is required"}}
@@ -49,6 +57,7 @@
                        :validatros {:required {}}
                        :on-change {::password-changed {}}}
             :email    {:type :collection
+                       :on-change {::email-changed {}}
                        :item {:type :string
                               :validators {:email {}}}}                    
             :address {:type :form
@@ -226,6 +235,43 @@
                                        :uri {:value "http://google.com"}}}
                             2 {:value {:description {:value nil}
                                        :uri {:value nil}}}}}}})
+
+  (def form (model/set-collection form [:links] [{:description "First" :uri "http://first.com"}
+                                                 {:description "Second" :uri "http://second.com"}]))
+
+  (matcho/match
+   form
+   {:value {:links {:type :collection
+                    :item {:type :form
+                           :fields {:description {:type :string}
+                                    :uri         {:type :string}}}
+                    :value {0 {:type :form
+                               :value {:description {:type :string
+                                                     :value "First"}
+                                       :uri {:type :string
+                                             :value "http://first.com"}}}
+                            1 {:type :form
+                               :value {:description {:type :string
+                                                     :value "Second"}
+                                       :uri {:type :string
+                                             :value "http://second.com"}}}}}}})
+  )
+
+(deftest collection-item-on-change
+
+  (def form (model/form schema {:email ["ups" "ivan@gmail.com"]}))
+
+  (reset! test-state [])
+
+  (model/add-collection-item form [:email] "f@m.org")
+
+  (is (= [:email-changed :form-changed] @test-state))
+
+  (reset! test-state [])
+
+  (model/remove-collection-item form [:email] 0)
+
+  (is (= [:email-changed :form-changed] @test-state))
 )
 
 (deftest eval-form-test

@@ -80,8 +80,30 @@
     (cond-> (dissoc node :errors)
       errs (assoc :errors errs))))
 
+(defn *on-value-set-loop [form path]
+  (loop [form form path path]
+    (if (nil? path)
+      (*on-value-set form)
+      (recur (update-in form (get-node-path path) *on-value-set)
+             (butlast path)))))
+
+(defn *set-value [form path value & [type]]
+  (let [value (if (and (string? value) (str/blank? value)) nil value)
+        form (assoc-in form (if (= type :collection)
+                              (get-node-path path)
+                              (get-value-path path)) value)]
+    form))
 
 (defn set-value
+  "Put value for specific path; run validations"
+  [form path value & [type]]
+  (let [value (if (and (string? value) (str/blank? value)) nil value)
+        form (assoc-in form (if (= type :collection)
+                              (get-node-path path)
+                              (get-value-path path)) value)]
+    (*on-value-set-loop (*set-value form path value type) path)))
+
+#_(defn set-value
   "Put value for specific path; run validations"
   [form path value & [type]]
   (let [value (if (and (string? value) (str/blank? value)) nil value)
@@ -170,13 +192,19 @@
                   (inc (first (apply max-key key coll))))
             sch (:item node)
             v (*form sch [] (or v {}))]
-        (set-value form (conj path idx) v (:type node)))
+        (*on-value-set-loop (*set-value form (conj path idx) v (:type node)) path))
       form)))
 
 (defn remove-collection-item [form path idx]
   (let [node-path (get-node-path path)]
     (if (= :collection (get-in form (conj node-path :type)))
-      (update-in form (conj node-path :value) dissoc idx)
+      (*on-value-set-loop (update-in form (conj node-path :value) dissoc idx) path)
+      form)))
+
+(defn set-collection [form path v]
+  (let [node (get-in form (get-node-path path))]
+    (if (= :collection (:type node))
+      (set-value form path (*form node [] (or v {})) (:type node))
       form)))
 
 (rf/reg-event-db
@@ -188,6 +216,11 @@
  :zf/remove-collection-item
  (fn [db [_ form-path path idx]]
    (update-in db form-path (fn [form] (remove-collection-item form path idx)))))
+
+(rf/reg-event-db
+ :zf/set-collection
+ (fn [db [_ form-path path v]]
+   (update-in db form-path (fn [form] (set-collection form path v)))))
 
 (rf/reg-sub
  :zf/collection
