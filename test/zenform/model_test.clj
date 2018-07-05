@@ -39,6 +39,10 @@
                        :on-change {::name-changed {}}
                        :validators {:min-length {:value 5 :message "Should be longer then 5"}
                                     :required {}}}
+            :links    {:type :collection
+                       :item {:type :form
+                              :fields {:description {:type :string}
+                                       :uri         {:type :string}}}}
             :nick     {:type :string}
             :object   {:type :map}
             :password {:type :string
@@ -46,7 +50,7 @@
                        :on-change {::password-changed {}}}
             :email    {:type :collection
                        :item {:type :string
-                              :validators {:email {}}}}
+                              :validators {:email {}}}}                    
             :address {:type :form
                       :validators {:required {}}
                       :fields {:city {:type :string
@@ -118,7 +122,111 @@
    {:value {:name {:errors {:required "Should not be blank"}}}
     :errors {::name-or-nick "Name or Nick is required"}})
 
-  )
+  (def form (model/form schema {:email []
+                                :name "Hedin"}))
+
+  (def form (model/add-collection-item form [:name] "c@mail.com"))
+
+  (matcho/match
+   form
+   {:type :form
+    :value {:name {:value "Hedin"}
+            :password {}
+            :email {:value {}}}})
+
+  (def form (model/add-collection-item form [:email] "a@mail.com"))
+
+  (matcho/match
+   form
+   {:value {:email {:value {0 {:value "a@mail.com"}}}}})
+
+  (def form (model/add-collection-item form [:email] "b@mail.com"))
+
+  (matcho/match
+   form
+   {:value {:email {:value {0 {:value "a@mail.com"}
+                            1 {:value "b@mail.com"}}}}})
+
+  (def form (model/add-collection-item form [:email] "c@mail.com"))
+
+  (matcho/match
+   form
+   {:value {:email {:value {0 {:value "a@mail.com"}
+                            1 {:value "b@mail.com"}
+                            2 {:value "c@mail.com"}}}}})
+
+  (def form (model/remove-collection-item form [:name] 1))
+
+  (matcho/match
+   form
+   {:value {:name {:value "Hedin"}
+            :email {:value {0 {:value "a@mail.com"}
+                            1 {:value "b@mail.com"}
+                            2 {:value "c@mail.com"}}}}})
+
+  (def form (model/remove-collection-item form [:email] 7))
+
+  (matcho/match
+   form
+   {:value {:name {:value "Hedin"}
+            :email {:value {0 {:value "a@mail.com"}
+                            1 {:value "b@mail.com"}
+                            2 {:value "c@mail.com"}}}}})
+
+  (def form (model/remove-collection-item form [:email] 1))
+
+  (matcho/match
+   form
+   {:value {:email {:value {0 {:value "a@mail.com"}
+                            2 {:value "c@mail.com"}}}}})
+
+  (def form (model/add-collection-item form [:email] "d@mail.com"))
+
+  (matcho/match
+   form
+   {:value {:email {:value {0 {:value "a@mail.com"}
+                            2 {:value "c@mail.com"}
+                            3 {:value "d@mail.com"}}}}})
+
+  (def form (model/form schema {:links [{:description "My first link"
+                                         :uri "http://example.com"}]}))
+  
+
+  (matcho/match
+   form
+   {:value {:links {:value {0 {:type :form
+                               :value {:description {:type :string
+                                                     :value "My first link"}
+                                       :uri {:type :string
+                                             :value "http://example.com"}}}}}}})
+
+  (def form (model/add-collection-item form [:links] {:description "Another link"
+                                                      :uri "http://google.com"}))
+
+  (matcho/match
+   form
+   {:value {:links {:value {0 {:type :form
+                               :value {:description {:type :string
+                                                     :value "My first link"}
+                                       :uri {:type :string
+                                             :value "http://example.com"}}}
+                            1 {:type :form
+                               :value {:description {:type :string
+                                                     :value "Another link"}
+                                       :uri {:type :string
+                                             :value "http://google.com"}}}}}}})
+
+  (def form (model/add-collection-item form [:links] nil))
+
+  (matcho/match
+   form
+   {:value {:links {:value {0 {:value {:description {:value "My first link"}
+                                       :uri {:value "http://example.com"}}}
+                            1 {:value {:description {:value "Another link"}
+                                       :uri {:value "http://google.com"}}}
+                            2 {:value {:description {:value nil}
+                                       :uri {:value nil}}}}}}})
+)
 
 (deftest eval-form-test
 
