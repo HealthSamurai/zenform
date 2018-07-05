@@ -46,6 +46,10 @@
             :email {:type :collection
                     :item {:type :string
                            :validators {:email {}}}}
+            :links {:type :collection
+                    :item {:type :form
+                           :fields {:description {:type :string}
+                                    :uri         {:type :string}}}}
             :role {:type :string
                    :items [{:value "admin" :display "admin"}
                            {:value "user" :display "user"}]}
@@ -79,7 +83,8 @@
 (defn index []
   (rf/dispatch [:zf/init form-path form-schema init-value])
   (let [errors (rf/subscribe [::errors])
-        emails (rf/subscribe [:zf/collection form-path [:email]])]
+        emails (rf/subscribe [:zf/collection form-path [:email]])
+        links  (rf/subscribe [:zf/collection form-path [:links]])]
     (fn [_]
       (println @emails)
       [:div.container
@@ -101,10 +106,11 @@
 
           [:br]
           [:div.form-group
-           [:label "Email: " [:code (pr-str ['zenform/text-input form-path [:email]])]]
+           [:label "Email:"]
            (for [[idx val] (sort-by key @emails)]
              ^{:key idx}
              [:div
+              [:div [:code (pr-str ['zenform/text-input form-path [:email idx]])]]
               [:div.row
                [:div.col
                 [zenform/text-input form-path [:email idx]]]
@@ -113,7 +119,36 @@
                  {:on-click #(rf/dispatch [:zf/remove-collection-item form-path [:email] idx])} "Remove"]]]
               [zenform/invalid-feedback form-path [:email idx]]])
            [:button.btn.btn-success
-            {:on-click #(rf/dispatch [:zf/add-collection-item form-path [:email] "test@domen.org"])} "Add"]]]
+            {:on-click #(rf/dispatch [:zf/add-collection-item form-path [:email] "test@domen.org"])} "Add"]]
+
+          [:br]
+          [:div.form-group
+           [:label "Links:"]
+           (for [[idx val] (sort-by key @links)]
+             ^{:key idx}
+             [:div
+              [:div.row
+               [:div.col
+                [:div [:code (pr-str ['zenform/text-input form-path [:links idx :description]])]]]
+               [:div.col
+                [:div [:code (pr-str ['zenform/text-input form-path [:links idx :uri]])]]]
+               [:div.col]]
+              [:div.row
+               [:div.col
+                [zenform/text-input form-path [:links idx :description]]]
+               [:div.col
+                [zenform/text-input form-path [:links idx :uri]]]
+               [:div.col
+                [:button.btn.btn-danger
+                 {:on-click #(rf/dispatch [:zf/remove-collection-item form-path [:links] idx])} "Remove"]]]
+              [zenform/invalid-feedback form-path [:links idx]]])
+           [:button.btn.btn-success
+            {:on-click #(rf/dispatch [:zf/add-collection-item
+                                      form-path
+                                      [:links]
+                                      {:description "Google url"
+                                       :uri "http://google.com"}])}
+            "Add"]]]
 
          [:div.form-group
           [:label "Role: " [:code (pr-str ['zenform/ut form-path [:role]])]]
