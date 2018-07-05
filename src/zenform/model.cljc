@@ -83,9 +83,11 @@
 
 (defn set-value
   "Put value for specific path; run validations"
-  [form path value]
+  [form path value & [type]]
   (let [value (if (and (string? value) (str/blank? value)) nil value)
-        form (assoc-in form (get-value-path path) value)]
+        form (assoc-in form (if (= type :collection)
+                              (get-node-path path)
+                              (get-value-path path)) value)]
     (loop [form form path path]
       (if (nil? path)
         (*on-value-set form)
@@ -165,8 +167,10 @@
       (let [coll (:value node)
             idx (if (empty? coll)
                   0
-                  (inc (first (apply max-key key coll))))]
-        (set-value form (conj path idx) v))
+                  (inc (first (apply max-key key coll))))
+            sch (:item node)
+            v (*form sch [] (or v {}))]
+        (set-value form (conj path idx) v (:type node)))
       form)))
 
 (defn remove-collection-item [form path idx]
