@@ -9,7 +9,7 @@
   [{limit :value msg :message} v]
   (when (string? v)
     (when (< (count v) limit)
-      (or msg (str "Should be longer then " limit)))))
+      (or msg (str "Shouldn't be shorter then " limit)))))
 
 (defmethod validate
   :required
