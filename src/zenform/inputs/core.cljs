@@ -20,7 +20,7 @@
             errs (:errors *node)]
         [:input.form-control (-> attrs
                                  (assoc :value v)
-                                 (update :class (fn [class] (str class (when errs " is-invalid") )))) 
+                                 (update :class (fn [class] (str class (when errs " is-invalid") ))))
          ]))))
 
 (defn invalid-feedback [form-path path]
@@ -29,17 +29,31 @@
       (let [errs (:errors @node)]
         [:div.invalid-feedback {:style {:display "block"}} (str/join ", " (vals errs))]))))
 
+
 (defn select [form-path path & [attrs]]
-  (let [node (rf/subscribe [:zf/node form-path path])
-        on-change (fn [x] (rf/dispatch [:zf/set-value form-path path (.. x -target -value)]))]
-    (fn [& _]
-      (let [*node @node
-            v (:value *node)
-            errs (:errors *node)]
-        [:select.form-control (assoc attrs :on-change on-change)
-         (for [i (:items *node)]
-           [:option {:key (or (:id i) (:value i)) :value (:value i)}
-            (:display i)])]))))
+  (let [node @(rf/subscribe [:zf/node form-path path])
+        on-change (fn [x]
+                    (rf/dispatch
+                     [:zf/set-value form-path path
+                      (.. x -target -value)]))]
+
+    (let [{value-current :value
+           :keys [errors]} node
+
+          value-current (or value-current "")]
+
+      [:select.form-control
+       (merge attrs
+              {:on-change on-change
+               :value value-current})
+
+       (for [item (:items node)
+             :let [{:keys [id value display]} item
+                   key (or id value)]]
+         [:option
+          {:key key :value value}
+          (or display value)])])))
+
 
 (defn toggle [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])
