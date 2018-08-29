@@ -43,7 +43,7 @@
     (let [res (->> (mapv *get-value (mapv second (sort-by first (:value form))))
                    (filterv #(not (nil? %))))]
       (when-not (empty? res) res))
-    
+
 
     (and  (map? form) (map? (:value form)) (= :form (:type form)))
     (let [res (reduce (fn [acc [k node]]
@@ -52,7 +52,7 @@
                             (assoc acc k v)
                             acc))) {} (:value form))]
       (when-not (empty? res) res))
-    
+
 
     :else (:value form)))
 
@@ -60,7 +60,7 @@
 (defn get-value
   "Get value for specific path; if path not passed returns form value"
   ([form path]
-   (*get-value (get-in form  (get-node-path path))))
+   (*get-value (get-in form (get-node-path path))))
   ([form]
    (*get-value form)))
 
@@ -141,7 +141,7 @@
                                                                   (assoc es (into [idx] err-k) err-v))
                                                                 es err))))
                           res (-> res (assoc-in [:form :value idx] ch-node))]
-                      (cond-> res 
+                      (cond-> res
                         (and (not (nil? v)) (= tp :collection)) (update :value conj v)
                         (and (not (nil? v)) (= tp :form))       (assoc-in [:value idx] v)))
                     ) {:value   (if (= tp :form) {} []) :errors  {} :form node} v)

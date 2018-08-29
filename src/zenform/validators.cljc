@@ -11,6 +11,18 @@
     (when (< (count v) limit)
       (or msg (str "Shouldn't be shorter then " limit)))))
 
+
+(defmethod validate
+  :number
+  [{msg :message} v]
+  (when-not
+      (and (not (if (string? v)
+                  (str/blank? v)
+                  (empty? v)))
+           (or (>= v 0) (<= v 0)))
+    (or msg "Should be a number")))
+
+
 (defmethod validate
   :required
   [{msg :message} v]

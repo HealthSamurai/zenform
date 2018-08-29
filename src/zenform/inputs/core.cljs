@@ -18,10 +18,9 @@
       (let [*node @node
             v (:value *node)
             errs (:errors *node)]
-        [:input.form-control (-> attrs
-                                 (assoc :value v)
-                                 (update :class (fn [class] (str class (when errs " is-invalid") ))))
-         ]))))
+        [:input (-> attrs
+                    (assoc :value v)
+                    (update :class (fn [class] (str class (when errs " is-invalid") ))))]))))
 
 (defn invalid-feedback [form-path path]
   (let [node (rf/subscribe [:zf/node form-path path])]
@@ -42,7 +41,7 @@
 
           value-current (or value-current "")]
 
-      [:select.form-control
+      [:select
        (merge attrs
               {:on-change on-change
                :value value-current})
