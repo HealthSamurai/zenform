@@ -273,13 +273,13 @@
           (.call sv *cm (.toString (or @value (get cm-opts "value") "")))
           ;; (.setValue *cm (.toString (or @value "")))
           (.call on *cm "change"
-                 (fn [& _] (rf/dispatch [:zf/set-value form-path path (.call gv *cm)])))))
+                 (fn [& _] (rf/dispatch-sync [:zf/set-value form-path path (.call gv *cm)])))))
 
       :component-did-update
       (fn [this [_ old-props]]
         (let [*cm @cm]
           ;;(println @st)
-          (if-not (= @value (.call (aget *cm "getValue") *cm))
+          (when-not (= @value (.call (aget *cm "getValue") *cm))
             (.setOption @cm "value" @value))
           (doseq [[k v] @st]
             (if (not= k "extraKeys")
