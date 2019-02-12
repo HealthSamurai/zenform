@@ -106,6 +106,21 @@
            (fn [node]
              (assoc node :selection 0)))))
 
+(def timer (atom nil))
+
+(defn clear-debounce []
+  (js/clearTimeout @timer)
+  (reset! timer nil))
+
+(defn debounce [fnc ms]
+  (if @timer (clear-debounce))
+  (reset! timer
+          (js/setTimeout
+           (fn []
+             (clear-debounce)
+             (fnc))
+           ms)))
+
 (defn *zselect [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])
         state (atom {})
@@ -120,18 +135,18 @@
                          40 (rf/dispatch [:zf/selection-next form-path path])
                          13 (rf/dispatch [:zf/selection-select form-path path])
                          (let [q (.. e -target -value)]
-                           (rf/dispatch [(:event os) (assoc os :query q)])
+                           (debounce #(rf/dispatch [(:event os) (assoc os :query q)]) 400)
                            [:zf/selection-reset form-path path])))
 
         open-dropdown  (fn []
                          (rf/dispatch [:zf/dropdown form-path path true])
-                         (js/setTimeout 
+                         (js/setTimeout
                           #(when-let [focus-node (:focus-node @state)]
                              (.focus focus-node)) 100))
 
         on-click (fn [i] (fn [_]
-                           (rf/dispatch [:zf/dropdown form-path path false])
-                           (rf/dispatch [:zf/set-value form-path path (:value i)])))
+                           (rf/dispatch [:zf/set-value form-path path (:value i)])
+                           (rf/dispatch [:zf/dropdown form-path path false])))
 
         close-dropdown (fn [] (rf/dispatch [:zf/dropdown form-path path false]))]
     (fn [& _]
@@ -148,7 +163,7 @@
          [:div.zselect-dropdown-wrap
           [:div.zdropdown {:style {:display (when-not (:dropdown *node) "none")}}
            [:input.form-control {:ref #(swap! state assoc :focus-node %)
-                                 :on-blur close-dropdown
+                                 :on-blur (fn [] (js/setTimeout #(close-dropdown) 200))
                                  :on-key-down on-key-press
                                  :placeholder "Search..."}]
            (when (= :loading status) [:div.zprogress "◷"])
