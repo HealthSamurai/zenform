@@ -3,7 +3,8 @@
   (:require [zenform.model :as model]
             [re-frame.core :as rf]
             [garden.core :as garden]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import [goog.async Debouncer]))
 
 (rf/reg-event-db
  :zf/dropdown
@@ -129,13 +130,16 @@
         items-path (conj node-path :items)
         status-path (conj node-path :status)
         os (assoc (:on-search zselect-cfg) :items-path items-path :status-path status-path)
+        event (Debouncer. (fn [q] (rf/dispatch [(:event os) (assoc os :query q)]))
+                          (or (:debounce-interval zselect-cfg)
+                              400))
         on-key-press (fn [e]
                        (case (.-keyCode e)
                          38 (do (rf/dispatch [:zf/selection-prev form-path path]) (.preventDefault e))
                          40 (rf/dispatch [:zf/selection-next form-path path])
                          13 (rf/dispatch [:zf/selection-select form-path path])
                          (let [q (.. e -target -value)]
-                           (debounce #(rf/dispatch [(:event os) (assoc os :query q)]) 400)
+                           (.fire event q)
                            [:zf/selection-reset form-path path])))
 
         open-dropdown  (fn []
