@@ -2,7 +2,8 @@
   (:require [re-frame.core :as rf]
             [reagent.core :as r]))
 
-(def Doc (.-Doc js/CodeMirror))
+(def Doc (when js/CodeMirror
+           (.-Doc js/CodeMirror)))
 
 (defn codemirror
   ([node]
