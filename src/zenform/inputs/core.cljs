@@ -24,25 +24,27 @@
 
 (defn date-input [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])
-        attrs (assoc attrs :on-input #(rf/dispatch [:zf/set-value form-path path (.. % -target -value)]))]
+        attrs (assoc attrs :on-change (fn [e]
+                                        (rf/dispatch [:zf/set-value form-path path (.. e -target -value)])))]
     (fn [& _]
       (let [*node @node
             v (:value *node)
             errs (:errors *node)]
         [:input (-> attrs
-                    (assoc :value v)
+                    (assoc :default-value v)
                     (assoc :type "date")
                     (update :class (fn [class] (str class (when errs " is-invalid") ))))]))))
 
 (defn time-input [form-path path & [attrs]]
   (let [node (rf/subscribe [:zf/node form-path path])
-        attrs (assoc attrs :on-input #(rf/dispatch [:zf/set-value form-path path (.. % -target -value)]))]
+        attrs (assoc attrs :on-change (fn [e]
+                                        (rf/dispatch [:zf/set-value form-path path (.. e -target -value)])))]
     (fn [& _]
       (let [*node @node
             v (:value *node)
             errs (:errors *node)]
         [:input (-> attrs
-                    (assoc :value v)
+                    (assoc :default-value v)
                     (assoc :type "time")
                     (update :class (fn [class] (str class (when errs " is-invalid") ))))]))))
 

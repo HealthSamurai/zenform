@@ -7,6 +7,8 @@
    [zenform.inputs.codemirror :as cm]))
 
 (def text-input #'inputs/text-input)
+(def date-input #'inputs/date-input)
+(def time-input #'inputs/time1-input)
 (def invalid-feedback #'inputs/invalid-feedback)
 (def select #'inputs/select)
 (def toggle #'inputs/toggle)
