@@ -12,6 +12,14 @@
                        (assoc acc k (*form *sch (conj path k) v))))
                    {} (:fields sch)))
 
+
+    (= :object (:type sch))
+    (assoc (dissoc sch :item) :value
+           (reduce (fn [acc [k *sch]]
+                     (let [v (get val k)]
+                       (assoc acc k (*form *sch (conj path k) v))))
+                   {} (:item sch)))
+
     (= :collection (:type sch))
     (assoc sch :value
            (->> (map-indexed (fn [i *val]
@@ -97,6 +105,7 @@
 (defn set-value
   "Put value for specific path; run validations"
   [form path value & [type]]
+  (println "type on set:" type)
   (let [value (if (and (string? value) (str/blank? value)) nil value)
         form (assoc-in form (if (= type :collection)
                               (get-node-path path)
@@ -131,7 +140,7 @@
 ;; at the same time collect value
 ;; intended to be used at submit
 (defn *eval-form [{tp :type v :value :as node}]
-  (if (or (= tp :collection) (= tp :form))
+  (if (some #{tp} [:collection :form :object]) 
     (let [{v :value :as res}
           (reduce (fn [res [idx n]]
                     (let [{v :value err :errors ch-node :form} (*eval-form n)
@@ -143,8 +152,8 @@
                           res (-> res (assoc-in [:form :value idx] ch-node))]
                       (cond-> res
                         (and (not (nil? v)) (= tp :collection)) (update :value conj v)
-                        (and (not (nil? v)) (= tp :form))       (assoc-in [:value idx] v)))
-                    ) {:value   (if (= tp :form) {} []) :errors  {} :form node} v)
+                        (and (not (nil? v)) (some #{tp} [:form :object])) (assoc-in [:value idx] v)))
+                    ) {:value   (if (some #{tp} [:form :object]) {} []) :errors  {} :form node} v)
           errs (validate-node node v)]
       (cond-> (update res :value (fn [x] (when-not (empty? x) x)))
         errs (assoc-in [:errors []] errs)
