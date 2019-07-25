@@ -237,3 +237,10 @@
    (rf/subscribe [:zf/node form-path path]))
  (fn [node _]
    (:value node)))
+
+(rf/reg-event-fx
+ :zf/update-node-schema
+ (fn [{db :db} [_ form-path path value]]
+   {:db (update-in db
+                   (into form-path (get-node-path path))
+                   #(merge % value))}))
