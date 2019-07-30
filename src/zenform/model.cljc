@@ -178,6 +178,14 @@
    (update-in db form-path (fn [form] (set-value form path v)))))
 
 (rf/reg-sub
+ :zf/collection-indexes
+ (fn [db [_ form-path path]]
+   (-> db
+       (get-in form-path)
+       (get-in (get-node-path path))
+       :value keys)))
+
+(rf/reg-sub
  :zf/node
  (fn [db [_ form-path path]]
    (-> db
