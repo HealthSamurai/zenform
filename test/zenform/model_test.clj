@@ -67,8 +67,7 @@
 
 (deftest form-functions-test
 
-  (reset! test-state [])
-
+  (reset! test-state [])  
   (def form (model/form schema {:name "Ivan"
                                 :email ["ivan@ya.ru" "ivan@gmail.com"]}))
 
@@ -81,17 +80,17 @@
             :email {:value {0 {:value "ivan@ya.ru"}
                             1 {:value "ivan@gmail.com"}}}}})
 
-  (def form (model/set-value form [:name] "Nicola"))
+  (def form (model/set-value form [:form] [:name] "Nicola"))
 
   (get-in form [:value :name :value])
 
   (is (= [:name-changed :form-changed] @test-state))
 
-  (def form (model/set-value form [:password] "secret"))
+  (def form (model/set-value form [:form] [:password] "secret"))
 
   (is (= [:name-changed :form-changed :password-changed :form-changed] @test-state))
 
-  (def form (model/set-value form [:address :city] "NY"))
+  (def form (model/set-value form [:form] [:address :city] "NY"))
 
   (matcho/match 
    form
@@ -109,22 +108,22 @@
           :email ["ivan@ya.ru" "ivan@gmail.com"]}
          (model/get-value form)))
 
-  (def form (model/set-value form [:name] "Nic"))
+  (def form (model/set-value form [:form] [:name] "Nic"))
 
   (matcho/match
    form
    {:value {:name {:value "Nic"
                    :errors {:min-length "Should be longer then 5"}}}})
 
-  (def form (model/set-value form [:name] "Nicola"))
+  (def form (model/set-value form [:form] [:name] "Nicola"))
 
   (matcho/match
    form
    {:value {:name {:value "Nicola" :errors nil?}}})
 
-  (def form (model/set-value form [:name] nil))
-  (def form (model/set-value form [:address :city] nil))
-  (def form (model/set-value form [:email 0] "ups"))
+  (def form (model/set-value form [:form] [:name] nil))
+  (def form (model/set-value form [:form] [:address :city] nil))
+  (def form (model/set-value form [:form] [:email 0] "ups"))
 
   (matcho/match
    form
@@ -134,7 +133,7 @@
   (def form (model/form schema {:email []
                                 :name "Hedin"}))
 
-  (def form (model/add-collection-item form [:name] "c@mail.com"))
+  (def form (model/add-collection-item form [:form] [:name] "c@mail.com"))
 
   (matcho/match
    form
@@ -143,20 +142,20 @@
             :password {}
             :email {:value {}}}})
 
-  (def form (model/add-collection-item form [:email] "a@mail.com"))
+  (def form (model/add-collection-item form [:form] [:email] "a@mail.com"))
 
   (matcho/match
    form
    {:value {:email {:value {0 {:value "a@mail.com"}}}}})
 
-  (def form (model/add-collection-item form [:email] "b@mail.com"))
+  (def form (model/add-collection-item form [:form] [:email] "b@mail.com"))
 
   (matcho/match
    form
    {:value {:email {:value {0 {:value "a@mail.com"}
                             1 {:value "b@mail.com"}}}}})
 
-  (def form (model/add-collection-item form [:email] "c@mail.com"))
+  (def form (model/add-collection-item form [:form] [:email] "c@mail.com"))
 
   (matcho/match
    form
@@ -189,7 +188,7 @@
    {:value {:email {:value {0 {:value "a@mail.com"}
                             2 {:value "c@mail.com"}}}}})
 
-  (def form (model/add-collection-item form [:email] "d@mail.com"))
+  (def form (model/add-collection-item form [:form] [:email] "d@mail.com"))
 
   (matcho/match
    form
@@ -209,7 +208,7 @@
                                        :uri {:type :string
                                              :value "http://example.com"}}}}}}})
 
-  (def form (model/add-collection-item form [:links] {:description "Another link"
+  (def form (model/add-collection-item form [:form] [:links] {:description "Another link"
                                                       :uri "http://google.com"}))
 
   (matcho/match
@@ -225,7 +224,7 @@
                                        :uri {:type :string
                                              :value "http://google.com"}}}}}}})
 
-  (def form (model/add-collection-item form [:links] nil))
+  (def form (model/add-collection-item form [:form] [:links] nil))
 
   (matcho/match
    form
@@ -247,14 +246,14 @@
                                     :uri         {:type :string}}}
                     :value {0 {:type :form
                                :value {:description {:type :string
-                                                     :value "First"}
+                                                     :value "My first link"}
                                        :uri {:type :string
-                                             :value "http://first.com"}}}
+                                             :value "http://example.com"}}}
                             1 {:type :form
                                :value {:description {:type :string
-                                                     :value "Second"}
+                                                     :value "Another link"}
                                        :uri {:type :string
-                                             :value "http://second.com"}}}}}}})
+                                             :value "http://google.com"}}}}}}})
   )
 
 (deftest collection-item-on-change
@@ -263,7 +262,7 @@
 
   (reset! test-state [])
 
-  (model/add-collection-item form [:email] "f@m.org")
+  (model/add-collection-item form [:form :test] [:email] "f@m.org")
 
   (is (= [:email-changed :form-changed] @test-state))
 

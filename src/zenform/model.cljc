@@ -71,37 +71,37 @@
               (assoc errs k msg)
               errs)) nil (:validators node)))
 
-(defn *on-value-set [node]
+(defn *on-value-set [node form-path path]
   (let [v (*get-value node)
         errs (validate-node node v)]
     (doall
      (for [[k args] (:on-change node)]
-       (rf/dispatch [k v args])))
+       (rf/dispatch [k v form-path path args])))
     (cond-> (dissoc node :errors)
       errs (assoc :errors errs))))
 
-(defn *on-value-set-loop [form path]
+(defn *on-value-set-loop [form form-path path]
   (loop [form form path path]
     (if (nil? path)
-      (*on-value-set form)
-      (recur (update-in form (get-node-path path) *on-value-set)
+      (*on-value-set form form-path path)
+      (recur (update-in form (get-node-path path) #(*on-value-set % form-path path))
              (butlast path)))))
 
-(defn *set-value [form path value & [type]]
+(defn *set-value [form form-path path value & [type]]
   (let [value (if (and (string? value) (str/blank? value)) nil value)
         form (assoc-in form (if (= type :collection)
                               (get-node-path path)
-                              (get-value-path path)) value)]
-    form))
+                              (get-value-path path)) value)
+        ] form))
 
 (defn set-value
   "Put value for specific path; run validations"
-  [form path value & [type]]
+  [form form-path path value & [type]]
   (let [value (if (and (string? value) (str/blank? value)) nil value)
         form (assoc-in form (if (= type :collection)
                               (get-node-path path)
                               (get-value-path path)) value)]
-    (*on-value-set-loop (*set-value form path value type) path)))
+    (*on-value-set-loop (*set-value form form-path path value type) form-path path )))
 
 #_(defn set-value
   "Put value for specific path; run validations"
@@ -166,7 +166,7 @@
 (rf/reg-event-db
  :zf/set-value
  (fn [db [_ form-path path v]]
-   (update-in db form-path (fn [form] (set-value form path v)))))
+   (update-in db form-path (fn [form] (set-value form form-path path v)))))
 
 (rf/reg-sub
  :zf/collection-indexes
@@ -191,7 +191,7 @@
        (get-value form path)
        (get-value form)))))
 
-(defn add-collection-item [form path v]
+(defn add-collection-item [form form-path path v]
   (let [node (get-in form (get-node-path path))]
     (if (= :collection (:type node))
       (let [coll (:value node)
@@ -200,13 +200,13 @@
                   (inc (first (apply max-key key coll))))
             sch (:item node)
             v (*form sch [] (or v {}))]
-        (*on-value-set-loop (*set-value form (conj path idx) v (:type node)) path))
+        (*on-value-set-loop (*set-value form form-path (conj path idx) v (:type node)) (get-in form (get-node-path path)) path))
       form)))
 
 (defn remove-collection-item [form path idx]
   (let [node-path (get-node-path path)]
     (if (= :collection (get-in form (conj node-path :type)))
-      (*on-value-set-loop (update-in form (conj node-path :value) dissoc idx) path)
+      (*on-value-set-loop (update-in form (conj node-path :value) dissoc idx) node-path path)
       form)))
 
 (defn set-collection [form path v]
@@ -218,7 +218,7 @@
 (rf/reg-event-db
  :zf/add-collection-item
  (fn [db [_ form-path path v]]
-   (update-in db form-path (fn [form] (add-collection-item form path v)))))
+   (update-in db form-path (fn [form] (add-collection-item form form-path path v)))))
 
 (rf/reg-event-db
  :zf/remove-collection-item
