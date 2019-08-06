@@ -237,9 +237,13 @@
  (fn [node _]
    (:value node)))
 
+(defn get-full-path
+  [form-path path]
+  (into form-path (get-node-path path)))
+
 (rf/reg-event-fx
  :zf/update-node-schema
  (fn [{db :db} [_ form-path path value]]
    {:db (update-in db
-                   (into form-path (get-node-path path))
+                   (get-full-path form-path path)
                    #(merge % value))}))
