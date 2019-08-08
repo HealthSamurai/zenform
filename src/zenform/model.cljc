@@ -71,6 +71,29 @@
               (assoc errs k msg)
               errs)) nil (:validators node)))
 
+
+(defn fire-on-change [form-path form &[path]]
+  (when-let [node (get-in form (or path []))]
+    (when-let [change (:on-change node)]
+      (let [ppth (vec (remove #(= :value %) path))]
+        (doall
+         (for [[k args] change]
+           (rf/dispatch [k (:value node) form-path ppth args])))))
+    (if (map? node)
+      (reduce-kv (fn [path k v]
+                   (fire-on-change form-path form (conj path k))
+                   path)
+                 (if (or (= :collection (:type node)) (= :form (:type node)))
+                   (conj (or path []) :value))
+                 (if (or (= :collection (:type node)) (= :form (:type node)))
+                   (:value node))))))
+
+(rf/reg-event-fx
+ :zf/fire-on-change
+ (fn [{db :db} [_ form-path]]
+   (fire-on-change form-path (get-in db form-path))
+   {}))
+
 (defn *on-value-set [node form-path path]
   (let [v (*get-value node)
         errs (validate-node node v)]
