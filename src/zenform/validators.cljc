@@ -11,6 +11,12 @@
     (when (< (count v) limit)
       (or msg (str "Shouldn't be shorter then " limit)))))
 
+(defmethod validate
+  :min-items
+  [{limit :value msg :message} v]
+  (when (coll? (or v []))
+    (when (< (count v) limit)
+      (or msg (str "Shouldn't be shorter then " limit)))))
 
 (defmethod validate
   :number
@@ -21,7 +27,6 @@
                   (empty? v)))
            (or (>= v 0) (<= v 0)))
     (or msg "Should be a number")))
-
 
 (defmethod validate
   :required
