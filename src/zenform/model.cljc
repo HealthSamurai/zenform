@@ -207,6 +207,11 @@
        (get-in (get-node-path path)))))
 
 (rf/reg-sub
+ :zf/form
+ (fn [db [_ form-path]]
+   (get-in db form-path)))
+
+(rf/reg-sub
  :zf/get-value
  (fn [db [_ form-path path]]
    (let [form (get-in db form-path)]
