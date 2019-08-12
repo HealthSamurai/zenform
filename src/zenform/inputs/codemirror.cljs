@@ -280,8 +280,8 @@
       (fn [this [_ old-props]]
         (let [*cm @cm]
           ;;(println @st)
-          (when-not (= @value (.call (aget *cm "getValue") *cm))
-            (.setOption @cm "value" @value))
+          (when-not (= (or @value "") (.call (aget *cm "getValue") *cm))
+            (.setOption @cm "value" (or @value "")))
           (doseq [[k v] @st]
             (if (not= k "extraKeys")
               (.setOption @cm k v)))
