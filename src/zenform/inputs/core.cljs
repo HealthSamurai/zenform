@@ -52,7 +52,7 @@
   (let [node (rf/subscribe [:zf/node form-path path])]
     (fn [& _]
       (let [errs (:errors @node)]
-        [:div.invalid-feedback {:style {:display "block"}} (str/join ", " (vals errs))]))))
+        [:div.invalid-feedback {:style {:display "block" :visibility "visible"}} (str/join ", " (vals errs))]))))
 
 
 (defn select [form-path path & [attrs]]
