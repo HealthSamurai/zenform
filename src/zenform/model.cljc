@@ -3,16 +3,16 @@
             [clojure.string :as str]
             [re-frame.core :as rf]))
 
-(defn *form [sch path val]
+(defn *form [{:keys [type default] :as sch} path val]
   (cond
-    (= :form (:type sch))
+    (= :form type)
     (assoc (dissoc sch :fields) :value
            (reduce (fn [acc [k *sch]]
                      (let [v (get val k)]
                        (assoc acc k (*form *sch (conj path k) v))))
                    {} (:fields sch)))
 
-    (= :collection (:type sch))
+    (= :collection type)
     (assoc sch :value
            (->> (map-indexed (fn [i *val]
                                [i (*form
@@ -21,8 +21,11 @@
                                    *val)]) val)
                 (into {})))
 
-    (:type sch)
-    (assoc sch :value val)
+    type 
+    (assoc sch :value (or val
+                          (if (fn? default)
+                            (default)
+                            default)))
 
     :else val))
 

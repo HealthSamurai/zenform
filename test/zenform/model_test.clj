@@ -295,6 +295,35 @@
              [:address]       {:required "Should not be blank"}
              [:name]          {:required "Should not be blank"}}}))
 
+
+(deftest init-default
+  (def form-path [:form])
+  (def form-schema
+    {:type :form
+     :fields {:id {:type "string" :default "def"}}})
+
+  (rf/dispatch [:zf/init form-path form-schema {}])
+  (matcho/match @re-test/app-db
+   {:form
+    {:type :form
+     :value  {:id {:value "def"}}}})
+  
+  (rf/dispatch [:zf/init form-path form-schema {:id "HS"}])
+  (matcho/match @re-test/app-db
+   {:form
+    {:type :form
+     :value  {:id {:value "HS"}}}})
+
+  (def form-schema
+    {:type :form
+     :fields {:id {:type "string" :default #(str "foo" "-" "bar")}}})
+
+  (rf/dispatch [:zf/init form-path form-schema {}])
+  (matcho/match @re-test/app-db
+                {:form
+                 {:type :form
+                  :value  {:id {:value "foo-bar"}}}}))
+
 (deftest zenform-test
 
   (reset! re-test/app-db {})
