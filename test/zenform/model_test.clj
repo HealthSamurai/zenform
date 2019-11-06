@@ -209,7 +209,7 @@
                                              :value "http://example.com"}}}}}}})
 
   (def form (model/add-collection-item form [:form] [:links] {:description "Another link"
-                                                      :uri "http://google.com"}))
+                                                              :uri "http://google.com"}))
 
   (matcho/match
    form
@@ -271,7 +271,7 @@
   (model/remove-collection-item form [:email] 0)
 
   (is (= [:email-changed :form-changed] @test-state))
-)
+  )
 
 (deftest eval-form-test
 
@@ -304,15 +304,15 @@
 
   (rf/dispatch [:zf/init form-path form-schema {}])
   (matcho/match @re-test/app-db
-   {:form
-    {:type :form
-     :value  {:id {:value "def"}}}})
+                {:form
+                 {:type :form
+                  :value  {:id {:value "def"}}}})
   
   (rf/dispatch [:zf/init form-path form-schema {:id "HS"}])
   (matcho/match @re-test/app-db
-   {:form
-    {:type :form
-     :value  {:id {:value "HS"}}}})
+                {:form
+                 {:type :form
+                  :value  {:id {:value "HS"}}}})
 
   (def form-schema
     {:type :form
@@ -323,6 +323,122 @@
                 {:form
                  {:type :form
                   :value  {:id {:value "foo-bar"}}}}))
+
+(deftest eval-form-test
+  (matcho/match
+   (model/eval-form
+    {:type :form
+     :value {:foo {:type :form
+                   :value {:mar {:value "mar"}}}
+             :bar {:value "bar"}}})
+
+   {:value {:foo {:mar "mar"}
+            :bar "bar"}})
+
+
+  (matcho/match
+   (model/eval-form
+    {:type :form
+     :value {:foo {:type :collection
+                   :value {"1" {:value "mar"}
+                           "8" {:value "zar"}}}
+             :bar {:value "bar"}}})
+
+   {:value {:foo ["mar" "zar"]
+            :bar "bar"}})
+
+  (matcho/match
+   (model/eval-form
+    {:type :form
+     :value {:foo {:type :collection
+                   :value {"1" {:type :form
+                                :value {:idx {:value  "idx"}}}
+                           "8" {:value "zar"}}}
+             :bar {:value "bar"}}})
+
+   {:value {:foo [{:idx "idx"} "zar"]
+            :bar "bar"}})
+
+
+  (matcho/match
+   (model/eval-form
+    {:type :form
+     :value {:bar {:type :form
+                   :value {:mar {:type "string"
+                                 :validators {:required {}}}}}
+             :arr {:type :collection
+                   :validators {:min-items {:value 2}}
+                   :value {"2" {:type "string"
+                                :validators {:required {}}}}}
+             :foo {:type "string"
+                   :validators {:required {}}
+                   :value nil}}})
+
+   {:errors {[:bar :mar]  {:required  string?},
+             [:arr "2"]   {:required  string?},
+             [:arr]       {:min-items string?},
+             [:foo]       {:required  string?}}
+    :form {:type :form,
+           :value {:bar {:value {:mar {:errors {:required "Should not be blank"}}}},
+                   :arr {:value {"2" {:errors {:required "Should not be blank"}}},
+                         :errors {:min-items "Shouldn't be shorter then 2"}},
+                   :foo {:errors {:required "Should not be blank"}}}}})
+
+
+  (matcho/match
+   (model/eval-form
+    {:type :form
+     :value {
+             :bar {:type :form
+                   :value {:mar {:type "string"
+                                 :value nil
+                                 :validators {:required {}}}}}
+             :foo {:type "string"
+                   :validators {:required {}}
+                   :value nil}}})
+
+   {:errors {[:bar :mar] {:required string?}
+             [:foo] {:required string?}}})
+
+  #_(matcho/match
+   (model/eval-form
+    {:type :form
+     :value {:foo {:type :form 
+                   :value {:bar {:type :string
+                                 :validators {:required {}}}}}}})
+
+   {:value {:bar "bar"}})
+
+
+
+  )
+
+#_(deftest eval-value
+  (reset! test-state [])  
+  (def form-path [:form])
+  (def form-schema
+    {:type :form
+     :fields {:foo {:type "string" :default #(str "foo" "-" "bar")}
+              :bar {:type "string" :eval-value (fn [node-path form-value]
+                                                 (assoc-in form-value node-path (get-in form-value [:foo])))}
+              :mar {:type "string" :eval-value (fn [node-path form-value]
+                                                 (assoc-in form-value node-path (get-in form-value [:foo])))}
+              }})
+
+  (rf/dispatch [:zf/init form-path form-schema {}])
+  (matcho/match @re-test/app-db
+                {:form
+                 {:type :form
+                  :value  {:foo {:value "foo-bar"}
+                           :mar {:value nil :eval-value fn?}
+                           :bar {:value nil :eval-value fn?}}}})
+
+  (matcho/match
+   (-> @re-test/app-db :form model/eval-form :value)
+   {:foo "foo-bar"
+    :bar "foo-bar"
+    :mar "foo-bar"})
+  )
 
 (deftest zenform-test
 

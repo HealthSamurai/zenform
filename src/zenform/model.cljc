@@ -156,11 +156,75 @@
 ;; it evals all validators and collect errors
 ;; at the same time collect value
 ;; intended to be used at submit
-(defn *eval-form [{tp :type v :value :as node}]
+
+(declare eval-errors)
+
+(defn aggregate-errors [form-value {node-value :value :as node} node-index]
+  "For nodes with type :form and :collection
+reduce by fields of items and collect all child errros"
+  (reduce-kv
+   (fn [acc idx child-node]
+     (let [node-path (conj node-index idx)
+           errors (eval-errors form-value child-node node-path)]
+       (merge acc errors)))
+   {}
+   node-value))
+
+(defn eval-errors [form-value {node-type :type :as node} node-index]
+  "Get all child errors if need, then validate node itself
+after that merge in to one big error"
+  (let [child-errors (when (#{:collection :form} node-type)
+                       (aggregate-errors form-value node node-index))
+        node-errors (validate-node node (get-in form-value node-index))]
+    (cond-> child-errors
+      node-errors (assoc  node-index node-errors))))
+
+(declare **eval-form)
+(defn eval-form-node [{node-value :value :as node}]
+  (reduce-kv
+   (fn [acc field child-node]
+     (let [evalled-node (**eval-form child-node)]
+       (assoc acc field (:value evalled-node))))
+   {}
+   node-value))
+
+(defn eval-collection-node [{node-value :value :as node}]
+  (reduce-kv
+   (fn [acc index child-node]
+     (let [evalled-node (**eval-form child-node)]
+       (conj acc (:value evalled-node))))
+   []
+   node-value))
+
+(defn eval-node [{node-type :type :as node}]
+  (case node-type
+    :form        (eval-form-node node)
+    :collection  (eval-collection-node node)
+    (:value node)))
+
+(defn inject-errors [errors form]
+  (reduce-kv
+   (fn [acc path errs]
+     (let [node-path (get-node-path path)]
+       (assoc-in acc (conj node-path :errors) errs)))
+   form
+   errors ))
+
+(defn **eval-form [form]
+  "Collect form value, then validate whole form and collect errros"
+  (let [value   (eval-node form)
+        errors  (eval-errors value form [])
+        form    (inject-errors errors form)]
+    (cond-> {:value value
+             :form form}
+      errors (assoc :errors errors))))
+
+(defn *eval-form [{tp :type v :value :as node} & [pth]]
   (if (or (= tp :collection) (= tp :form))
     (let [{v :value :as res}
           (reduce (fn [res [idx n]]
-                    (let [{v :value err :errors ch-node :form} (*eval-form n)
+                    (let [pth (conj (or pth []) idx)
+                          {v :value err :errors ch-node :form :as eval-res} (*eval-form n pth)
                           res (if (empty? err) res
                                   (update res :errors (fn [es]
                                                         (reduce (fn [es [err-k err-v]]
@@ -169,8 +233,8 @@
                           res (-> res (assoc-in [:form :value idx] ch-node))]
                       (cond-> res
                         (and (not (nil? v)) (= tp :collection)) (update :value conj v)
-                        (and (not (nil? v)) (= tp :form))       (assoc-in [:value idx] v)))
-                    ) {:value   (if (= tp :form) {} []) :errors  {} :form node} v)
+                        (and (not (nil? v)) (= tp :form))       (assoc-in [:value idx] v))))
+                  {:value   (if (= tp :form) {} []) :errors  {} :form node} v)
           errs (validate-node node v)]
       (cond-> (update res :value (fn [x] (when-not (empty? x) x)))
         errs (assoc-in [:errors []] errs)
@@ -178,7 +242,7 @@
 
     (let [errs (validate-node node v)
           node (cond-> (assoc node :touched true) errs (assoc :errors errs))]
-      (cond-> {:value v :form node}
+      (cond-> {:value v :form node }
         errs (assoc :errors {[] errs})))))
 
 (defn eval-form [form]
