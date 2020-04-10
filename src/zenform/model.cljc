@@ -21,11 +21,12 @@
                                    *val)]) val)
                 (into {})))
 
-    type 
-    (assoc sch :value (or val
-                          (if (fn? default)
-                            (default)
-                            default)))
+    type
+    (assoc sch :value
+           (cond
+             (some? val)   val
+             (fn? default) (default)
+             :else         default))
 
     :else val))
 
