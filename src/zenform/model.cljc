@@ -71,7 +71,9 @@
 
 (defn validate-node [node v]
   (reduce (fn [errs [k cfg]]
-            (if-let [msg (validators/validate (update cfg :type (fn [x] (or x k))) v)]
+            (if-let [msg (validators/validate
+                          (merge {:type k, :node node} cfg)
+                          v)]
               (assoc errs k msg)
               errs)) nil (:validators node)))
 
