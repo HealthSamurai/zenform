@@ -4,31 +4,31 @@
             [re-frame.core :as rf]))
 
 (defn *form [{:keys [type default] :as sch} path val]
-  (cond
-    (= :form type)
-    (assoc (dissoc sch :fields) :value
-           (reduce (fn [acc [k *sch]]
-                     (let [v (get val k)]
-                       (assoc acc k (*form *sch (conj path k) v))))
-                   {} (:fields sch)))
+  (let [v (cond
+            (some? val)   val
+            (fn? default) (default)
+            :else         default)]
+    (cond
+      (= :form type)
+      (assoc (dissoc sch :fields) :value
+             (reduce (fn [acc [k *sch]]
+                       (let [v (get val k)]
+                         (assoc acc k (*form *sch (conj path k) v))))
+                     {} (:fields sch)))
+      (= :collection type)
+      (assoc sch :value
+             (into {}
+                   (map-indexed
+                    (fn [i *val]
+                      [i (*form
+                          (dissoc (:item sch) :value)
+                          (conj path i)
+                          *val)]))
+                   v))
+      type
+      (assoc sch :value v)
 
-    (= :collection type)
-    (assoc sch :value
-           (->> (map-indexed (fn [i *val]
-                               [i (*form
-                                   (dissoc (:item sch) :value)
-                                   (conj path i)
-                                   *val)]) val)
-                (into {})))
-
-    type
-    (assoc sch :value
-           (cond
-             (some? val)   val
-             (fn? default) (default)
-             :else         default))
-
-    :else val))
+      :else v)))
 
 (defn form
   "create form model from schema and defaults"
