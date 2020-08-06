@@ -104,8 +104,8 @@
   (let [v (*get-value node)
         errs (validate-node node v)]
     (doall
-     (for [[k args] (:on-change node)]
-       (rf/dispatch [k v form-path path args])))
+     (for [[k & args] (:on-change node)]
+       (rf/dispatch (apply vector k v form-path path args))))
     (cond-> (dissoc node :errors)
       errs (assoc :errors errs))))
 
