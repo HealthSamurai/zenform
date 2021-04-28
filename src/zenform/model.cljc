@@ -298,7 +298,10 @@ after that merge in to one big error"
                   (inc (first (apply max-key key coll))))
             sch (:item node)
             v (*form sch [] (or v {}))]
-        (*on-value-set-loop (*set-value form form-path (conj path idx) v (:type node)) (get-in form (get-node-path path)) path))
+        (*on-value-set-loop
+         (*set-value form form-path (conj path idx) v (:type node))
+         form-path #_(get-in form (get-node-path path))
+         path))
       form)))
 
 (defn remove-collection-item [form path idx]
